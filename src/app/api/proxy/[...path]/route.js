@@ -1,68 +1,6 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-// --- IN-MEMORY CACHE FOR PROXY GET REQUESTS ---
-const proxyCache = new Map();
-
-function getTtlForPath(path) {
-  const cleanPath = path.toLowerCase();
-  
-  // Static Data - 24 hours
-  if (
-    cleanPath.includes('struktur-desa') || 
-    cleanPath.includes('perangkat-desa') || 
-    cleanPath.includes('rt-rw') || 
-    cleanPath.includes('bumdes')
-  ) {
-    return 24 * 60 * 60 * 1000;
-  }
-  
-  // Semi-Static Data - 6 hours
-  if (
-    cleanPath.includes('desa-info') || 
-    cleanPath.includes('contact-info') || 
-    cleanPath.includes('contact/info') || 
-    cleanPath.includes('kontak-desa') || 
-    cleanPath.includes('fasilitas-desa') || 
-    cleanPath.includes('surat-types') ||
-    cleanPath.includes('berita-categories')
-  ) {
-    return 6 * 60 * 60 * 1000;
-  }
-  
-  // Medium Data - 1 hour
-  if (
-    cleanPath.includes('statistics') || 
-    cleanPath.includes('testimoni') || 
-    cleanPath.includes('umkm') || 
-    cleanPath.includes('agenda-desa') ||
-    cleanPath.includes('agenda-categories')
-  ) {
-    return 60 * 60 * 1000;
-  }
-  
-  // Dynamic Data - 30 minutes
-  if (
-    cleanPath.includes('apbdes') || 
-    cleanPath.includes('proyek-pembangunan') || 
-    cleanPath.includes('proyek-desa') ||
-    cleanPath.includes('bantuan-sosial-transparansi')
-  ) {
-    return 30 * 60 * 1000;
-  }
-  
-  // Frequent Data - 10 minutes
-  if (
-    cleanPath.includes('berita') || 
-    cleanPath.includes('announcements')
-  ) {
-    return 10 * 60 * 1000;
-  }
-  
-  return 0; // Do not cache by default
-}
-// ----------------------------------------------
-
 export async function GET(request, { params }) {
   return handleRequest('GET', request, params);
 }
@@ -89,21 +27,6 @@ async function handleRequest(method, request, paramsPromise) {
   const path = pathArray.join('/');
   const searchParams = new URL(request.url).searchParams;
   const queryString = searchParams.toString();
-
-  // Cache lookup logic for GET
-  const isGet = method === 'GET';
-  const ttl = isGet ? getTtlForPath(path) : 0;
-  const bypassCache = request.headers.get('cache-control') === 'no-cache' || searchParams.get('bypass-cache') === 'true';
-  const cacheKey = `${path}${queryString ? `?${queryString}` : ''}`;
-
-  if (isGet && ttl > 0 && !bypassCache) {
-    const cachedItem = proxyCache.get(cacheKey);
-    if (cachedItem && Date.now() < cachedItem.expiry) {
-      console.log(`[Proxy Cache HIT] /api/proxy/${cacheKey} (expires in ${Math.round((cachedItem.expiry - Date.now()) / 1000)}s)`);
-      return NextResponse.json(cachedItem.data, { status: 200 });
-    }
-    console.log(`[Proxy Cache MISS] /api/proxy/${cacheKey} (TTL: ${ttl / 1000}s)`);
-  }
 
   // Ambil Config dari .env
   const baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
@@ -168,15 +91,6 @@ async function handleRequest(method, request, paramsPromise) {
       validateStatus: () => true, // Forward all statuses
       timeout: 30000,
     });
-
-    // Cache setting logic for GET
-    if (isGet && ttl > 0 && response.status === 200 && response.data?.success) {
-      proxyCache.set(cacheKey, {
-        data: response.data,
-        expiry: Date.now() + ttl,
-      });
-      console.log(`[Proxy Cache SET] /api/proxy/${cacheKey} (expiry in ${ttl / 1000}s)`);
-    }
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error) {

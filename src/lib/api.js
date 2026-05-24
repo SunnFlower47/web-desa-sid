@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+// Bersihkan URL dari spasi atau garing di ujung jika tidak sengaja terinput di Vercel
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+  ? process.env.NEXT_PUBLIC_API_URL.trim().replace(/\/$/, "")
+  : "";
+
 const api = axios.create({
-  baseURL: '/api/proxy',
+  // Jika di Vercel, tembak langsung domain Laravel (misal: https://api-vilage.sunnflower.site/api)
+  // Jika NEXT_PUBLIC_API_URL kosong, dia akan fallback ke '/api/proxy' (opsi aman)
+  baseURL: BASE_URL || '/api/proxy',
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
@@ -20,13 +27,17 @@ api.interceptors.response.use(
 export const getImageUrl = (path) => {
   if (!path) return '';
 
-  // Jika path sudah berupa URL lengkap (misal dari API eksternal/Unsplash)
+  // Ambil base domain backend dari env (misal: https://api-vilage.sunnflower.site)
+  // Kita hilangkan '/api' di ujungnya untuk mendapatkan domain utamanya saja
+  const backendDomain = BASE_URL.replace('/api', '');
+
+  // Jika path sudah berupa URL lengkap
   if (path.startsWith('http')) {
-    // Jika mengandung domain backend kita, kita arahkan ke proxy rahasia
+    // Jika itu gambar dari backend kita, pastikan mengarah ke domain production yang benar
     if (path.includes('api-vilage.sunnflower.site') || path.includes('localhost:8000')) {
       const segments = path.split('/storage/');
       if (segments.length > 1) {
-        return `/api/storage/${segments[1]}`;
+        return `${backendDomain}/storage/${segments[1]}`;
       }
     }
     return path;
@@ -35,8 +46,8 @@ export const getImageUrl = (path) => {
   // Bersihkan path dari awalan 'storage/' jika ada
   const cleanPath = path.startsWith('storage/') ? path.replace('storage/', '') : path;
 
-  // Arahkan SEMUA gambar lewat Proxy Next.js
-  return `/api/storage/${cleanPath}`;
+  // Tembak langsung ke folder storage Laravel production
+  return `${backendDomain}/storage/${cleanPath}`;
 };
 
 export default api;
