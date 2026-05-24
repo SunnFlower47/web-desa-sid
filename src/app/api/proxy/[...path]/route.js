@@ -29,7 +29,8 @@ async function handleRequest(method, request, paramsPromise) {
   const queryString = searchParams.toString();
 
   // Ambil Config dari .env
-  const baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
+  let baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
+  baseUrl = baseUrl.replace(/\/$/, "");
   const proxyKey = process.env.NEXT_PUBLIC_PROXY_KEY;
 
   // --- SECURITY LAYER: Mencegah Akses Langsung ---
@@ -94,10 +95,12 @@ async function handleRequest(method, request, paramsPromise) {
 
     return NextResponse.json(response.data, { status: response.status });
   } catch (error) {
-    console.error('[Next-Proxy] Error:', error.message);
+    console.error('[Next-Proxy] Error details:', error.message, error.stack, 'Backend URL:', backendUrl);
     return NextResponse.json({
       success: false,
       message: 'Server desa sedang sibuk.',
+      error: error.message,
+      url: backendUrl
     }, { status: 500 });
   }
 }

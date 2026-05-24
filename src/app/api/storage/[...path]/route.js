@@ -12,7 +12,8 @@ export async function GET(request, { params: paramsPromise }) {
       return new NextResponse('Path not specified', { status: 400 });
     }
 
-    const backendUrl = 'https://api-vilage.sunnflower.site';
+    const baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
+    const backendUrl = baseUrl.replace(/\/$/, "");
     const secretKey = process.env.BACKEND_SECRET_KEY || 'CibatuVibeCoding2026';
     
     // Pastikan ini langsung ke domain backend, bukan jalur API
