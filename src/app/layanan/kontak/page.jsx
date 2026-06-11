@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function KontakPage() {
   const [contacts, setContacts] = useState([]);
@@ -21,6 +24,8 @@ export default function KontakPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = React.useRef(null);
 
   useEffect(() => {
     fetchContacts();
@@ -39,41 +44,44 @@ export default function KontakPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!recaptchaToken) {
+      alert("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const res = await api.post('/contact/submit', formData);
-      if (res.data.success) setSuccess(true);
+      const res = await api.post('/contact/submit', formData, {
+        headers: { 'X-Recaptcha-Token': recaptchaToken }
+      });
+      if (res.data.success) {
+        setSuccess(true);
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
+      }
     } catch (err) {
       alert("Gagal mengirim pesan. Silakan coba lagi.");
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setRecaptchaToken(null);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
-
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Hubungi <br/> <span className="text-emerald-700">Kami</span></>}
+        description="Kami siap melayani dan menjawab setiap pertanyaan Anda mengenai layanan Desa Cibatu."
+        breadcrumbs={[
+          { label: 'Layanan' },
+          { label: 'Kontak & Bantuan', href: '/layanan/kontak' }
+        ]}
+      />
+      <div className="container mx-auto px-6 max-w-6xl mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
           {/* Left Column: Info & Personnel */}
           <div>
-            <div className="mb-12">
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-4"
-              >
-                <Phone size={12} /> Pusat Informasi & Kontak
-              </motion.div>
-              <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
-                Hubungi <br/> <span className="text-emerald-700">Kami</span>
-              </h1>
-              <p className="text-lg text-slate-500 font-medium max-w-md">
-                Kami siap melayani dan menjawab setiap pertanyaan Anda mengenai layanan Desa Cibatu.
-              </p>
-            </div>
 
             <div className="space-y-6">
               <div className="flex items-center gap-6 p-6 bg-slate-50 rounded-3xl border border-slate-100 group hover:border-emerald-200 transition-all">
@@ -185,12 +193,29 @@ export default function KontakPage() {
                   </div>
                 </div>
 
-                <button 
-                  disabled={submitting} type="submit"
-                  className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 shadow-2xl shadow-emerald-900"
+                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1 mb-2 block">Keamanan ReCAPTCHA</label>
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                      onChange={setRecaptchaToken}
+                      theme="dark"
+                    />
+                  </div>
+                )}
+
+                <Button 
+                  type="submit"
+                  disabled={submitting}
+                  isLoading={submitting}
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 shadow-2xl shadow-emerald-900"
+                  size="lg"
+                  icon={<Send size={16} />}
+                  iconPosition="right"
                 >
-                  {submitting ? <Loader2 className="animate-spin" /> : <>Kirim Sekarang <Send size={16} /></>}
-                </button>
+                  {submitting ? "Mengirim..." : "Kirim Sekarang"}
+                </Button>
               </form>
             ) : (
               <motion.div 
@@ -204,12 +229,13 @@ export default function KontakPage() {
                 <p className="text-slate-400 font-medium mb-10 text-sm">
                   Terima kasih, pesan Anda sudah kami terima. Kami akan segera membalas melalui email atau WhatsApp.
                 </p>
-                <button 
+                <Button 
                   onClick={() => setSuccess(false)}
-                  className="px-10 py-4 bg-white/10 border border-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all"
+                  variant="outline"
+                  className="text-white border-white/20 hover:bg-white hover:text-slate-900"
                 >
                   Kirim Pesan Lagi
-                </button>
+                </Button>
               </motion.div>
             )}
           </div>

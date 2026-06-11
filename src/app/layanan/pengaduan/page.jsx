@@ -9,6 +9,11 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
+import Button from '@/components/ui/Button';
+import StateMessage from '@/components/ui/StateMessage';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function PengaduanPage() {
   const [formData, setFormData] = useState({
@@ -27,19 +32,33 @@ export default function PengaduanPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = React.useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!recaptchaToken) {
+      setError("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
     try {
-      const res = await api.post('/pengaduan/submit', formData);
+      const res = await api.post('/pengaduan/submit', formData, {
+        headers: { 'X-Recaptcha-Token': recaptchaToken }
+      });
       if (res.data.success) {
         setSuccess(true);
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Gagal mengirim laporan. Silakan coba lagi.");
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setRecaptchaToken(null);
     } finally {
       setSubmitting(false);
     }
@@ -54,29 +73,19 @@ export default function PengaduanPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
-
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Laporkan Masalah <br/> <span className="text-emerald-700">Di Sekitar Anda</span></>}
+        description="Bantu kami membangun Desa Cibatu yang lebih baik dengan melaporkan masalah infrastruktur, sosial, atau pelayanan."
+        breadcrumbs={[
+          { label: 'Layanan' },
+          { label: 'Pengaduan Warga', href: '/layanan/pengaduan' }
+        ]}
+      />
+      <div className="container mx-auto px-6 max-w-6xl mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           {/* Left Column: Form */}
           <div className="lg:col-span-2">
-            <div className="mb-12">
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-widest mb-4"
-              >
-                <Megaphone size={12} /> Portal Pengaduan Warga
-              </motion.div>
-              <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
-                Laporkan Masalah <br/> <span className="text-emerald-700">Di Sekitar Anda</span>
-              </h1>
-              <p className="text-lg text-slate-500 font-medium max-w-xl">
-                Bantu kami membangun Desa Cibatu yang lebih baik dengan melaporkan masalah infrastruktur, sosial, atau pelayanan.
-              </p>
-            </div>
 
             <AnimatePresence mode="wait">
               {!success ? (
@@ -84,7 +93,7 @@ export default function PengaduanPage() {
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                   onSubmit={handleSubmit} className="space-y-8"
                 >
-                  <div className="bg-slate-50 rounded-[2.5rem] p-8 md:p-10 border border-slate-100 space-y-8">
+                  <GlassCard padding="p-8 md:p-10" className="space-y-8 bg-slate-50 border-slate-100 mb-8">
                     {/* Identity Section */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
@@ -104,6 +113,27 @@ export default function PengaduanPage() {
                           value={formData.nik_pelapor}
                           onChange={(e) => setFormData({...formData, nik_pelapor: e.target.value})}
                           placeholder="16 Digit NIK"
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
+                        />
+                      </div>
+                    </div>                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
+                        <input 
+                          required type="email" 
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          placeholder="Email aktif untuk balasan"
+                          className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">No. WhatsApp / Telepon</label>
+                        <input 
+                          required type="text" 
+                          value={formData.telepon}
+                          onChange={(e) => setFormData({...formData, telepon: e.target.value})}
+                          placeholder="08xxxxxxxxxx"
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                         />
                       </div>
@@ -193,7 +223,18 @@ export default function PengaduanPage() {
                         </select>
                       </div>
                     </div>
-                  </div>
+                  </GlassCard>
+
+                  {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-2 block">Keamanan ReCAPTCHA</label>
+                      <ReCAPTCHA
+                        ref={recaptchaRef}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                        onChange={setRecaptchaToken}
+                      />
+                    </div>
+                  )}
 
                   {error && (
                     <div className="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold flex items-center gap-3">
@@ -201,32 +242,34 @@ export default function PengaduanPage() {
                     </div>
                   )}
 
-                  <button 
-                    disabled={submitting} type="submit"
-                    className="w-full py-5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] shadow-xl shadow-emerald-100 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                  <Button 
+                    type="submit"
+                    disabled={submitting}
+                    isLoading={submitting}
+                    className="w-full"
+                    size="lg"
+                    icon={<Send size={18} />}
+                    iconPosition="right"
                   >
-                    {submitting ? <Loader2 className="animate-spin" /> : <>Kirim Laporan Pengaduan <Send size={18} /></>}
-                  </button>
+                    {submitting ? "Mengirim Laporan..." : "Kirim Laporan Pengaduan"}
+                  </Button>
                 </motion.form>
               ) : (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                  className="bg-emerald-50 border border-emerald-100 rounded-[3rem] p-12 text-center"
-                >
-                  <div className="w-20 h-20 bg-emerald-600 text-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-xl">
-                    <CheckCircle2 size={40} />
-                  </div>
-                  <h2 className="text-3xl font-black text-slate-900 mb-4">Laporan Berhasil Terkirim!</h2>
-                  <p className="text-slate-600 font-medium mb-10 max-w-sm mx-auto">
-                    Terima kasih telah peduli. Laporan Anda telah masuk ke sistem dan akan segera diproses oleh petugas desa.
-                  </p>
-                  <button 
-                    onClick={() => setSuccess(false)}
-                    className="px-10 py-4 bg-white border border-emerald-200 text-emerald-700 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all"
-                  >
-                    Buat Laporan Baru
-                  </button>
-                </motion.div>
+                <div className="py-10">
+                  <StateMessage 
+                    type="success"
+                    title="Laporan Berhasil Terkirim!"
+                    message="Terima kasih telah peduli. Laporan Anda telah masuk ke sistem dan akan segera diproses oleh petugas desa."
+                    actionLabel="Buat Laporan Baru"
+                    onAction={() => {
+                      setSuccess(false);
+                      setFormData({
+                        nama_pelapor: '', nik_pelapor: '', telepon: '', email: '', alamat: '', 
+                        kategori: 'infrastruktur', judul: '', deskripsi: '', lokasi: '', prioritas: 'sedang'
+                      });
+                    }}
+                  />
+                </div>
               )}
             </AnimatePresence>
           </div>

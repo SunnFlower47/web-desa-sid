@@ -5,6 +5,9 @@ import { motion } from 'framer-motion';
 import { Newspaper, Calendar, User, ArrowRight, Search, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import api, { getImageUrl } from '@/lib/api';
+import PageHeader from '@/components/ui/PageHeader';
+import StateMessage from '@/components/ui/StateMessage';
+import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 
 export default function BeritaPage() {
   const [news, setNews] = useState([]);
@@ -52,39 +55,20 @@ export default function BeritaPage() {
   });
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={
+          <>Kabar Terbaru dari <br />
+          <span className="text-emerald-700">Desa Cibatu</span></>
+        }
+        description="Informasi resmi mengenai kegiatan, pembangunan, pengumuman penting, hingga kabar terkini seputar warga Desa Cibatu."
+        breadcrumbs={[
+          { label: 'Informasi' },
+          { label: 'Warta & Kabar Desa', href: '/info/berita' }
+        ]}
+      />
 
-        {/* Header */}
-        <div className="max-w-3xl mb-16">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-4"
-          >
-            <Newspaper size={12} />
-            <span>Warta & Kabar Desa</span>
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none"
-          >
-            Kabar Terbaru dari <br />
-            <span className="text-emerald-700">Desa Cibatu</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-500 font-medium leading-relaxed max-w-xl"
-          >
-            Informasi resmi mengenai kegiatan, pembangunan, pengumuman penting, hingga kabar terkini seputar warga Desa Cibatu.
-          </motion.p>
-        </div>
+      <div className="container mx-auto px-6 max-w-6xl mt-8">
 
         {/* Search & Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-12">
@@ -115,17 +99,17 @@ export default function BeritaPage() {
 
         {/* Loading State */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <Loader2 size={32} className="animate-spin text-primary mb-3" />
-            <p className="font-black uppercase tracking-widest text-[9px]">Menarik data...</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-10">
+            <LoadingSkeleton type="card" count={4} />
           </div>
         ) : error ? (
-          <div className="glass p-8 rounded-3xl text-center max-w-xl mx-auto border-red-500/10">
-            <p className="text-slate-600 font-bold mb-4 text-sm">{error}</p>
-            <button onClick={fetchNews} className="px-6 py-3 bg-primary text-white rounded-xl font-black text-[9px] uppercase tracking-widest">
-              Coba Lagi
-            </button>
-          </div>
+          <StateMessage 
+            type="error" 
+            title="Gagal Memuat Berita" 
+            message={error} 
+            actionLabel="Coba Lagi" 
+            onAction={fetchNews} 
+          />
         ) : (
           <>
           {/* News Grid (Internal & Pengumuman) */}
@@ -186,8 +170,12 @@ export default function BeritaPage() {
           )}
 
           {activeCategory !== 'Nasional' && filteredNews.length === 0 && (
-            <div className="py-20 text-center text-slate-500 font-medium bg-white rounded-3xl border border-slate-100 shadow-sm">
-              <p className="text-sm">Tidak ada berita yang ditemukan di kategori ini.</p>
+            <div className="py-10">
+              <StateMessage 
+                type="empty" 
+                title="Tidak Ada Berita" 
+                message="Tidak ada berita yang ditemukan di kategori atau pencarian ini." 
+              />
             </div>
           )}
           </>

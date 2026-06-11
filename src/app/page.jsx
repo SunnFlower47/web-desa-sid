@@ -12,6 +12,8 @@ import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import Link from 'next/link';
 import Image from 'next/image';
 import api, { getImageUrl } from '@/lib/api';
+import Button from '@/components/ui/Button';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const slides = [
   {
@@ -45,9 +47,16 @@ export default function Home() {
   const [isTestiModalOpen, setIsTestiModalOpen] = React.useState(false);
   const [testiForm, setTestiForm] = React.useState({ nama: '', instansi: '', isi: '', rating: 5 });
   const [isSubmittingTesti, setIsSubmittingTesti] = React.useState(false);
+  const [recaptchaToken, setRecaptchaToken] = React.useState(null);
+  const recaptchaRef = React.useRef(null);
 
   const handleTestiSubmit = async (e) => {
     e.preventDefault();
+    if (!recaptchaToken && process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY) {
+      alert("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
+      return;
+    }
+    
     setIsSubmittingTesti(true);
     try {
       const payload = {
@@ -56,14 +65,19 @@ export default function Home() {
         testimoni: testiForm.isi,     // Map isi to testimoni
         rating: testiForm.rating
       };
-      const res = await api.post('/testimoni', payload);
+      const config = recaptchaToken ? { headers: { 'X-Recaptcha-Token': recaptchaToken } } : {};
+      const res = await api.post('/testimoni', payload, config);
       
       if (res.data.success || res.status === 201) {
         alert('Terima kasih! Testimoni Anda berhasil dikirim dan menunggu persetujuan admin.');
         setIsTestiModalOpen(false);
         setTestiForm({ nama: '', instansi: '', isi: '', rating: 5 });
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
       } else {
         alert('Gagal mengirim testimoni: ' + (res.data?.message || 'Terjadi kesalahan'));
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       if (err.response?.status === 422) {
@@ -74,6 +88,8 @@ export default function Home() {
         alert('Gagal mengirim testimoni. Silakan coba lagi nanti.');
       }
       console.error(err);
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsSubmittingTesti(false);
     }
@@ -220,18 +236,28 @@ export default function Home() {
                 transition={{ delay: 0.6 }}
                 className="flex flex-wrap gap-4"
               >
-                <Link href="/layanan/surat" className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20">
-                  Layanan Online <ArrowRight size={16} />
-                </Link>
-                <button 
+                <Button 
+                  href="/layanan/surat" 
+                  icon={<ArrowRight size={16} />} 
+                  iconPosition="right" 
+                  size="lg" 
+                  className="text-[10px] uppercase tracking-widest"
+                >
+                  Layanan Online
+                </Button>
+                <Button 
+                  variant="secondary"
                   onClick={() => {
                     const chatBtn = document.querySelector('#chat-assistant-toggle');
                     if (chatBtn) chatBtn.click();
                   }}
-                  className="inline-flex items-center gap-3 px-8 py-4 glass text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all group"
+                  icon={<Sparkles size={16} className="text-emerald-400 group-hover:rotate-12 transition-transform" />}
+                  iconPosition="right"
+                  size="lg"
+                  className="bg-white/10 backdrop-blur-md border border-white/20 text-[10px] uppercase tracking-widest hover:bg-white/20"
                 >
-                  Tanya Asisten AI <Sparkles size={16} className="text-emerald-400 group-hover:rotate-12 transition-transform" />
-                </button>
+                  Tanya Asisten AI
+                </Button>
               </motion.div>
             </motion.div>
 
@@ -434,12 +460,13 @@ export default function Home() {
                   </div>
                   <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">Suara <span className="text-emerald-600">Warga</span></h3>
                 </div>
-                <button 
+                <Button 
                   onClick={() => setIsTestiModalOpen(true)}
-                  className="px-5 py-2.5 bg-white border border-emerald-100 text-emerald-700 font-bold text-[10px] uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                  variant="outline"
+                  className="bg-white"
                 >
                   + Kirim Testimoni
-                </button>
+                </Button>
               </div>
               <div className="space-y-6">
                 {testimoni.length > 0 ? testimoni.map((testi, idx) => (
@@ -531,9 +558,23 @@ export default function Home() {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Pesan Testimoni (Min. 10 Karakter)</label>
                   <textarea required minLength={10} rows={4} value={testiForm.isi} onChange={e => setTestiForm({...testiForm, isi: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..." />
                 </div>
-                <button disabled={isSubmittingTesti} type="submit" className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center">
+                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keamanan ReCAPTCHA</label>
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                      onChange={setRecaptchaToken}
+                    />
+                  </div>
+                )}
+                <Button 
+                  type="submit" 
+                  isLoading={isSubmittingTesti}
+                  className="w-full"
+                >
                   {isSubmittingTesti ? "Mengirim..." : "Kirim Testimoni"}
-                </button>
+                </Button>
               </form>
             </motion.div>
           </div>

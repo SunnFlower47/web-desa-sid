@@ -5,6 +5,11 @@ import { motion } from 'framer-motion';
 import { Calendar, User, ArrowLeft, Loader2, Globe, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import api, { getImageUrl } from '@/lib/api';
+import PageHeader from '@/components/ui/PageHeader';
+import StateMessage from '@/components/ui/StateMessage';
+import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
+import GlassCard from '@/components/ui/GlassCard';
+import SectionTitle from '@/components/ui/SectionTitle';
 
 export default function BeritaDetail({ params }) {
   // Next 15 requires unwrapping params Promise
@@ -55,48 +60,51 @@ export default function BeritaDetail({ params }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-48 pb-20 flex flex-col items-center justify-center">
-        <Loader2 size={40} className="animate-spin text-emerald-600 mb-4" />
-        <p className="font-bold text-slate-500 uppercase tracking-widest text-xs">Memuat Berita...</p>
+      <div className="min-h-screen pt-48 pb-20 container mx-auto px-6 max-w-4xl">
+        <LoadingSkeleton type="text" count={3} />
+        <br />
+        <LoadingSkeleton type="card" count={1} />
       </div>
     );
   }
 
   if (error || !berita) {
     return (
-      <div className="min-h-screen pt-48 pb-20 flex flex-col items-center justify-center text-center px-6">
-        <h2 className="text-3xl font-black text-slate-800 mb-4">Berita Tidak Ditemukan</h2>
-        <p className="text-slate-500 mb-8">{error || 'Mungkin berita ini sudah dihapus atau link tidak valid.'}</p>
-        <Link href="/info/berita" className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-700 transition-colors">
-          Kembali ke Daftar Berita
-        </Link>
+      <div className="min-h-screen pt-48 pb-20 container mx-auto px-6 max-w-4xl">
+        <StateMessage 
+          type="empty" 
+          title="Berita Tidak Ditemukan" 
+          message={error || 'Mungkin berita ini sudah dihapus atau link tidak valid.'} 
+          actionLabel="Kembali ke Daftar Berita" 
+          onAction={() => window.location.href='/info/berita'} 
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-40 pb-20 bg-slate-50">
-      <div className="container mx-auto px-6 max-w-4xl">
-        <Link href="/info/berita" className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-600 uppercase tracking-widest mb-8 transition-colors">
-          <ArrowLeft size={16} /> Kembali
-        </Link>
+    <div className="min-h-screen pb-20 bg-slate-50">
+      <PageHeader 
+        title={berita.judul}
+        breadcrumbs={[
+          { label: 'Informasi' },
+          { label: 'Berita', href: '/info/berita' },
+          { label: 'Detail' }
+        ]}
+        containerClassName="max-w-4xl px-6"
+      />
 
-        {/* Header Berita */}
-        <div className="mb-10">
-          <div className="flex items-center gap-2 mb-6">
-            <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm">
-              {berita.kategori || 'Berita'}
-            </span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Calendar size={12} /> {new Date(berita.published_at || berita.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </span>
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-tight mb-6">
-            {berita.judul}
-          </h1>
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-white px-5 py-3 rounded-2xl border border-slate-100 inline-flex shadow-sm">
-            <User size={16} className="text-emerald-600" /> 
-            <span>Ditulis oleh: <span className="font-bold text-slate-900">{berita.author?.name || 'Admin Desa Cibatu'}</span></span>
+      <div className="container mx-auto px-6 max-w-4xl">
+        <div className="mb-10 flex flex-wrap items-center gap-4">
+          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm">
+            {berita.kategori || 'Berita'}
+          </span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+            <Calendar size={12} /> {new Date(berita.published_at || berita.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-white px-4 py-2 rounded-xl border border-slate-100 inline-flex shadow-sm">
+            <User size={14} className="text-emerald-600" /> 
+            <span>Oleh: <span className="font-bold text-slate-900">{berita.author?.name || 'Admin Desa Cibatu'}</span></span>
           </div>
         </div>
 
@@ -111,21 +119,19 @@ export default function BeritaDetail({ params }) {
         </div>
 
         {/* Konten Berita */}
-        <div className="prose prose-lg md:prose-xl prose-slate max-w-none mb-24 bg-white p-8 md:p-16 rounded-[2.5rem] shadow-sm border border-slate-100 leading-relaxed" 
-             dangerouslySetInnerHTML={{ __html: berita.konten }}>
-        </div>
+        <GlassCard className="mb-24" padding="p-8 md:p-16">
+          <div className="prose prose-lg md:prose-xl prose-slate max-w-none leading-relaxed" 
+               dangerouslySetInnerHTML={{ __html: berita.konten }}>
+          </div>
+        </GlassCard>
 
         {/* Berita Nasional (Scraped) */}
         {eksternal.length > 0 && (
           <div className="mb-12">
-            <div className="flex items-center justify-between mb-8 border-b border-slate-200 pb-4">
-              <div>
-                <h3 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                  <Globe className="text-emerald-600" size={28} /> Lintas Nusantara
-                </h3>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Berita Nasional Terkini dari Portal Resmi</p>
-              </div>
-            </div>
+            <SectionTitle 
+              title="Lintas Nusantara" 
+              subtitle="Berita Nasional Terkini dari Portal Resmi" 
+            />
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {eksternal.map((ext, idx) => (

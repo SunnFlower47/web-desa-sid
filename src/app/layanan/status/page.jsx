@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
+import GlassCard from '@/components/ui/GlassCard';
+import StateMessage from '@/components/ui/StateMessage';
 
 export default function CekStatusSurat() {
   const [searchMode, setSearchMode] = useState("nomor"); // "nomor" or "nik"
@@ -81,38 +85,17 @@ export default function CekStatusSurat() {
   };
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-4xl">
-        
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
-
-        <div className="max-w-3xl mb-12">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest mb-4"
-          >
-            <ShieldCheck size={12} />
-            <span>Tracking System Digital</span>
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none"
-          >
-            Lacak <span className="text-emerald-700">Surat Anda</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-500 font-medium leading-relaxed max-w-xl"
-          >
-            Pantau progres verifikasi pengajuan surat Anda secara real-time. Masukkan NIK atau Nomor Pengajuan untuk memulai.
-          </motion.p>
-        </div>
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Lacak <span className="text-emerald-700">Surat Anda</span></>}
+        description="Pantau progres verifikasi pengajuan surat Anda secara real-time. Masukkan NIK atau Nomor Pengajuan untuk memulai."
+        breadcrumbs={[
+          { label: 'Layanan' },
+          { label: 'Cek Status', href: '/layanan/status' }
+        ]}
+        containerClassName="max-w-4xl px-6"
+      />
+      <div className="container mx-auto px-6 max-w-4xl mt-8">
 
         {/* Tab Selector */}
         <div className="flex justify-center mb-8 p-1.5 bg-slate-100 rounded-2xl w-full max-w-md mx-auto">
@@ -131,10 +114,7 @@ export default function CekStatusSurat() {
         </div>
 
         {/* Search Card */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl shadow-2xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10 mb-12"
-        >
+        <GlassCard className="mb-12 border-slate-100" padding="p-8 md:p-10">
           <form onSubmit={handleCheckStatus} className="space-y-6">
             <div className="">
               {searchMode === 'nik' ? (
@@ -182,14 +162,19 @@ export default function CekStatusSurat() {
               </div>
             )}
 
-            <button 
-              disabled={searching} type="submit"
-              className="w-full py-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-emerald-200 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+            <Button 
+              type="submit"
+              disabled={searching}
+              isLoading={searching}
+              className="w-full"
+              size="lg"
+              icon={<ArrowRight size={18} />}
+              iconPosition="right"
             >
-              {searching ? <Loader2 className="animate-spin" /> : <>Mulai Melacak <ArrowRight size={18} /></>}
-            </button>
+              {searching ? "Mencari..." : "Mulai Melacak"}
+            </Button>
           </form>
-        </motion.div>
+        </GlassCard>
 
         {/* Results List */}
         <AnimatePresence>
@@ -227,7 +212,7 @@ export default function CekStatusSurat() {
                             <FileText size={20} />
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{surat.nomor_surat}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{surat.nomor_surat || surat.nomor_resi}</p>
                             <h3 className="text-lg font-black text-slate-900 tracking-tight leading-none">{surat.jenis_surat_nama}</h3>
                           </div>
                         </div>

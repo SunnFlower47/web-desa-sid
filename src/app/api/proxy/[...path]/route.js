@@ -9,17 +9,7 @@ export async function POST(request, { params }) {
   return handleRequest('POST', request, params);
 }
 
-export async function PUT(request, { params }) {
-  return handleRequest('PUT', request, params);
-}
 
-export async function PATCH(request, { params }) {
-  return handleRequest('PATCH', request, params);
-}
-
-export async function DELETE(request, { params }) {
-  return handleRequest('DELETE', request, params);
-}
 
 async function handleRequest(method, request, paramsPromise) {
   const params = await paramsPromise;
@@ -31,7 +21,7 @@ async function handleRequest(method, request, paramsPromise) {
   // Ambil Config dari .env
   let baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
   baseUrl = baseUrl.replace(/\/$/, "");
-  const proxyKey = process.env.NEXT_PUBLIC_PROXY_KEY;
+  const proxyKey = process.env.PROXY_KEY || process.env.NEXT_PUBLIC_PROXY_KEY; // NEXT_PUBLIC fallback sementara
 
   // --- SECURITY LAYER: Mencegah Akses Langsung ---
   const fetchSite = request.headers.get('sec-fetch-site');
@@ -69,7 +59,7 @@ async function handleRequest(method, request, paramsPromise) {
     if (recaptcha) headers['X-Recaptcha-Token'] = recaptcha;
     if (csrf) headers['X-CSRF-Token'] = csrf;
 
-    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    if (method === 'POST') {
       try {
         const contentType = request.headers.get('content-type');
         if (contentType?.includes('multipart/form-data')) {
@@ -84,16 +74,64 @@ async function handleRequest(method, request, paramsPromise) {
       }
     }
 
-    const response = await axios({
-      method,
-      url: backendUrl,
-      data: body,
-      headers: headers,
-      validateStatus: () => true, // Forward all statuses
-      timeout: 30000,
-    });
+    // Gunakan native fetch untuk GET agar bisa Cache TTL Next.js
+    if (method === 'GET') {
+      let revalidateTime = 0; // default no-cache (REAL_TIME)
 
-    return NextResponse.json(response.data, { status: response.status });
+      if (path === 'struktur-desa' || path === 'perangkat-desa') {
+        revalidateTime = 86400; // 24 Jam (STATIC)
+      } else if (
+        path === 'desa-info' || 
+        path === 'kontak-desa' || 
+        path === 'contact/info' || 
+        path === 'surat-types' || 
+        path === 'berita-categories' || 
+        path === 'fasilitas-desa' ||
+        path === 'geojson'        // GeoJSON jarang berubah, cache 6 jam
+      ) {
+        revalidateTime = 21600; // 6 Jam (SEMI_STATIC)
+      } else if (path === 'statistics' || path === 'testimoni') {
+        revalidateTime = 3600; // 1 Jam (MEDIUM)
+      } else if (
+        path === 'apbdes' || 
+        path === 'proyek-pembangunan' || 
+        path === 'bantuan-sosial-transparansi'
+      ) {
+        revalidateTime = 1800; // 30 Menit (DYNAMIC)
+      } else if (
+        path.startsWith('berita') && path !== 'berita-categories'
+      ) {
+        revalidateTime = 600; // 10 Menit (FREQUENT)
+      }
+
+      const response = await fetch(backendUrl, {
+        method: 'GET',
+        headers: headers,
+        next: { revalidate: revalidateTime }
+      });
+
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json().catch(() => null) || {};
+      } else {
+        data = await response.text();
+      }
+
+      return NextResponse.json(data, { status: response.status });
+    } else {
+      // Gunakan axios untuk POST, PUT, DELETE, dll
+      const response = await axios({
+        method,
+        url: backendUrl,
+        data: body,
+        headers: headers,
+        validateStatus: () => true, // Forward all statuses
+        timeout: 30000,
+      });
+
+      return NextResponse.json(response.data, { status: response.status });
+    }
   } catch (error) {
     console.error('[Next-Proxy] Error details:', error.message, error.stack, 'Backend URL:', backendUrl);
     return NextResponse.json({

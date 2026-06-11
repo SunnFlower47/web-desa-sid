@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, FileText, Users, Lock, Eye, CheckCircle, AlertTriangle, ArrowLeft, Info } from 'lucide-react';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default function KebijakanDataPage() {
   const sections = [
@@ -88,26 +89,17 @@ export default function KebijakanDataPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-5xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
-
-        <div className="mb-16">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-4"
-          >
-            <Shield size={12} /> Pemerintahan Terbuka & Aman
-          </motion.div>
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
-            Kebijakan <br/> <span className="text-emerald-700">Data Desa</span>
-          </h1>
-          <p className="text-lg text-slate-500 font-medium max-w-2xl">
-            Transparansi, akuntabilitas, dan perlindungan privasi data warga dalam ekosistem pemerintahan Desa Cibatu.
-          </p>
-        </div>
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Kebijakan <br/> <span className="text-emerald-700">Data Desa</span></>}
+        description="Transparansi, akuntabilitas, dan perlindungan privasi data warga dalam ekosistem pemerintahan Desa Cibatu."
+        breadcrumbs={[
+          { label: 'Informasi' },
+          { label: 'Kebijakan Data', href: '/kebijakan-data' }
+        ]}
+        containerClassName="max-w-5xl px-6"
+      />
+      <div className="container mx-auto px-6 max-w-5xl mt-8">
 
         {/* Intro Card */}
         <motion.div 

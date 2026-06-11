@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import ChatAssistant from '@/components/ai/ChatAssistant';
+import CacheClearButton from '@/components/dev/CacheClearButton';
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -32,7 +33,11 @@ export const metadata = {
   },
 };
 
+import Script from 'next/script';
+
 export default function RootLayout({ children }) {
+  const v3SiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY;
+  
   return (
     <html lang="id">
       <body className={`${inter.variable} ${outfit.variable} font-outfit antialiased`}>
@@ -41,6 +46,13 @@ export default function RootLayout({ children }) {
         {children}
         <Footer />
         <ChatAssistant />
+        <CacheClearButton />
+        {v3SiteKey && (
+          <Script 
+            src={`https://www.google.com/recaptcha/api.js?render=${v3SiteKey}`} 
+            strategy="beforeInteractive" 
+          />
+        )}
       </body>
     </html>
   );

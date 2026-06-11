@@ -8,6 +8,10 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
+import GlassCard from '@/components/ui/GlassCard';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function TestimoniPage() {
   const [testimonials, setTestimonials] = useState([]);
@@ -18,8 +22,13 @@ export default function TestimoniPage() {
   const [categories, setCategories] = useState([]);
 
   // Form State
-  const [testiForm, setTestiForm] = useState({ nama: '', instansi: '', isi: '', rating: 5 });
+  const [testiForm, setTestiForm] = useState({ 
+    nama: '', instansi: '', isi: '', rating: 5, 
+    email: '', telepon: '', is_anonymous: false 
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = React.useRef(null);
 
   const fetchTestimonials = async () => {
     try {
@@ -46,24 +55,38 @@ export default function TestimoniPage() {
 
   const handleTestiSubmit = async (e) => {
     e.preventDefault();
+    if (!recaptchaToken) {
+      alert("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
-        nama: testiForm.nama,
+        nama: testiForm.is_anonymous ? 'Warga Anonim' : testiForm.nama,
         kategori: testiForm.instansi, // Map instansi to kategori
         testimoni: testiForm.isi,     // Map isi to testimoni
-        rating: testiForm.rating
+        rating: testiForm.rating,
+        email: testiForm.is_anonymous ? '' : testiForm.email,
+        telepon: testiForm.is_anonymous ? '' : testiForm.telepon,
+        is_anonymous: testiForm.is_anonymous
       };
-      const res = await api.post('/testimoni', payload);
+      const res = await api.post('/testimoni', payload, {
+        headers: { 'X-Recaptcha-Token': recaptchaToken }
+      });
       
       if (res.data.success || res.status === 201) {
         alert('Terima kasih! Testimoni Anda berhasil dikirim dan menunggu persetujuan admin.');
         setIsModalOpen(false);
-        setTestiForm({ nama: '', instansi: '', isi: '', rating: 5 });
+        setTestiForm({ nama: '', instansi: '', isi: '', rating: 5, email: '', telepon: '', is_anonymous: false });
         // Refresh testimonials lists
         fetchTestimonials();
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
       } else {
         alert('Gagal mengirim testimoni: ' + (res.data?.message || 'Terjadi kesalahan'));
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       if (err.response?.status === 422) {
@@ -74,6 +97,8 @@ export default function TestimoniPage() {
         alert('Gagal mengirim testimoni. Silakan coba lagi nanti.');
       }
       console.error(err);
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setRecaptchaToken(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -107,53 +132,44 @@ export default function TestimoniPage() {
   const averageRating = testimonials.length > 0 ? (totalRating / testimonials.length).toFixed(1) : '0.0';
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-16">
-          <div>
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest mb-4"
-            >
-              <HeartHandshake size={12} /> Aspirasi & Kepuasan Warga
-            </motion.div>
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
-              Suara <span className="text-emerald-700">Masyarakat</span>
-            </h1>
-            <p className="text-lg text-slate-500 font-medium max-w-xl">
-              Daftar testimoni dan tanggapan langsung dari warga mengenai pelayanan publik digital Desa Cibatu.
-            </p>
-          </div>
-          <button 
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Suara <span className="text-emerald-700">Masyarakat</span></>}
+        description="Daftar testimoni dan tanggapan langsung dari warga mengenai pelayanan publik digital Desa Cibatu."
+        breadcrumbs={[
+          { label: 'Informasi' },
+          { label: 'Testimoni Warga', href: '/testimoni' }
+        ]}
+        action={
+          <Button 
             onClick={() => setIsModalOpen(true)}
-            className="self-start md:self-center px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-emerald-600/20"
+            size="lg"
+            className="shadow-xl shadow-emerald-600/20"
           >
             + Tulis Testimoni
-          </button>
-        </div>
+          </Button>
+        }
+      />
+      <div className="container mx-auto px-6 max-w-6xl mt-8">
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-center">
+          <GlassCard padding="p-8" className="text-center bg-slate-50 border-slate-100">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Aspirasi</h4>
             <p className="text-4xl font-black text-slate-900">{testimonials.length}</p>
             <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Telah disetujui</p>
-          </div>
+          </GlassCard>
           <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white text-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl" />
             <h4 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">Rating Rata-Rata</h4>
             <p className="text-4xl font-black text-white">{averageRating} <span className="text-yellow-400 text-2xl">★</span></p>
             <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Skala 1 - 5 Bintang</p>
           </div>
-          <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-center">
+          <GlassCard padding="p-8" className="text-center bg-slate-50 border-slate-100">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Kategori Warga</h4>
             <p className="text-4xl font-black text-slate-900">{categories.length}</p>
             <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">Jenis instansi / profesi</p>
-          </div>
+          </GlassCard>
         </div>
 
         {/* Filter Bar */}
@@ -227,11 +243,11 @@ export default function TestimoniPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+          <GlassCard padding="py-20" className="text-center bg-slate-50 border-slate-100">
             <MessageCircle className="mx-auto mb-4 text-slate-300" size={48} />
             <h3 className="text-lg font-black text-slate-700">Belum Ada Testimoni</h3>
             <p className="text-slate-400 text-xs font-semibold mt-1">Jadilah yang pertama memberikan testimoni!</p>
-          </div>
+          </GlassCard>
         )}
       </div>
 
@@ -262,15 +278,58 @@ export default function TestimoniPage() {
               <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan Desa Digital Cibatu.</p>
               
               <form onSubmit={handleTestiSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nama Lengkap</label>
+                <div className="flex items-center gap-2 px-1 mb-2">
                   <input 
-                    required type="text" value={testiForm.nama} 
-                    onChange={e => setTestiForm({...testiForm, nama: e.target.value})} 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
-                    placeholder="Misal: Budi Santoso" 
+                    type="checkbox" id="anon" 
+                    checked={testiForm.is_anonymous} 
+                    onChange={e => setTestiForm({...testiForm, is_anonymous: e.target.checked})}
+                    className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                   />
+                  <label htmlFor="anon" className="text-xs font-bold text-slate-600 cursor-pointer">
+                    Kirim sebagai Anonim (Sembunyikan Identitas)
+                  </label>
                 </div>
+
+                <AnimatePresence>
+                  {!testiForm.is_anonymous && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nama Lengkap</label>
+                        <input 
+                          required type="text" value={testiForm.nama} 
+                          onChange={e => setTestiForm({...testiForm, nama: e.target.value})} 
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
+                          placeholder="Misal: Budi Santoso" 
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email (Opsional)</label>
+                          <input 
+                            type="email" value={testiForm.email} 
+                            onChange={e => setTestiForm({...testiForm, email: e.target.value})} 
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
+                            placeholder="budi@email.com" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Telepon (Opsional)</label>
+                          <input 
+                            type="text" value={testiForm.telepon} 
+                            onChange={e => setTestiForm({...testiForm, telepon: e.target.value})} 
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
+                            placeholder="08xxxxxxxxxx" 
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keterangan / Instansi</label>
                   <input 
@@ -280,6 +339,7 @@ export default function TestimoniPage() {
                     placeholder="Misal: Warga RT 02 / Tokoh Masyarakat" 
                   />
                 </div>
+
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rating Kepuasan</label>
                   <div className="flex gap-2 mb-2">
@@ -304,12 +364,26 @@ export default function TestimoniPage() {
                     placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..." 
                   />
                 </div>
-                <button 
-                  disabled={isSubmitting} type="submit" 
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center"
+
+                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keamanan ReCAPTCHA</label>
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                      onChange={setRecaptchaToken}
+                    />
+                  </div>
+                )}
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
+                  className="w-full shadow-lg shadow-emerald-600/20"
+                  size="lg"
                 >
                   {isSubmitting ? "Mengirim..." : "Kirim Testimoni"}
-                </button>
+                </Button>
               </form>
             </motion.div>
           </div>

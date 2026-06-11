@@ -14,6 +14,26 @@ const api = axios.create({
   }
 });
 
+// Interceptor untuk menangani reCAPTCHA v3 secara otomatis pada request mutating (POST, PUT, DELETE)
+api.interceptors.request.use(async (config) => {
+  const v3SiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY;
+  if (config.method !== 'get' && v3SiteKey && typeof window !== 'undefined' && window.grecaptcha) {
+    try {
+      const token = await new Promise((resolve) => {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.execute(v3SiteKey, { action: 'api_request' }).then(resolve);
+        });
+      });
+      if (token) {
+        config.headers['X-Recaptcha-V3-Token'] = token;
+      }
+    } catch (e) {
+      console.warn('reCAPTCHA v3 generation failed', e);
+    }
+  }
+  return config;
+}, (error) => Promise.reject(error));
+
 // Interceptor untuk menangani error secara global
 api.interceptors.response.use(
   (response) => response,
@@ -42,6 +62,21 @@ export const getImageUrl = (path) => {
 
   // Gunakan Next.js storage proxy
   return `/api/storage/${cleanPath}`;
+};
+
+export const getUmkm = async (params = {}) => {
+  const response = await api.get('/umkm', { params });
+  return response.data;
+};
+
+export const getFasilitasDesa = async (params = {}) => {
+  const response = await api.get('/fasilitas-desa', { params });
+  return response.data;
+};
+
+export const getVillageGeoJson = async () => {
+  const response = await api.get('/geojson');
+  return response.data;
 };
 
 export default api;

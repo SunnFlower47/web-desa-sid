@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
+import GlassCard from '@/components/ui/GlassCard';
 
 export default function StatistikPage() {
   const [stats, setStats] = useState(null);
@@ -32,8 +35,11 @@ export default function StatistikPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Loader2 className="animate-spin text-emerald-600" size={40} />
+      <div className="min-h-screen pt-48 pb-20 container mx-auto px-6 max-w-6xl">
+        <LoadingSkeleton type="text" count={2} className="mb-12" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+          <LoadingSkeleton type="card" count={4} />
+        </div>
       </div>
     );
   }
@@ -46,36 +52,27 @@ export default function StatistikPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Cibatu <br/> <span className="text-emerald-700">Dalam Angka</span></>}
+        description="Transparansi data kependudukan Desa Cibatu yang diperbarui secara berkala untuk perencanaan pembangunan yang lebih baik."
+        breadcrumbs={[
+          { label: 'Informasi' },
+          { label: 'Statistik', href: '/info/statistik' }
+        ]}
+      />
 
-        <div className="mb-16">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-4"
-          >
-            <Activity size={12} /> Data Kependudukan Terintegrasi
-          </motion.div>
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
-            Cibatu <br/> <span className="text-emerald-700">Dalam Angka</span>
-          </h1>
-          <p className="text-lg text-slate-500 font-medium max-w-2xl">
-            Transparansi data kependudukan Desa Cibatu yang diperbarui secara berkala untuk perencanaan pembangunan yang lebih baik.
-          </p>
-        </div>
+      <div className="container mx-auto px-6 max-w-6xl mt-8">
 
         {/* Main Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {mainStats.map((item, idx) => (
-            <motion.div 
+            <GlassCard 
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 hover:shadow-2xl hover:shadow-slate-200 transition-all group"
+              padding="p-8"
+              hover={true}
+              delay={idx * 0.1}
+              className="bg-slate-50 border-slate-100 group"
             >
               <div className={`w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-${item.color}-600 mb-6 group-hover:scale-110 transition-transform`}>
                 {item.icon}
@@ -84,7 +81,7 @@ export default function StatistikPage() {
               <p className="text-3xl font-black text-slate-900 tabular-nums">
                 {item.value?.toLocaleString('id-ID')}
               </p>
-            </motion.div>
+            </GlassCard>
           ))}
         </div>
 
@@ -118,7 +115,7 @@ export default function StatistikPage() {
           </div>
 
           {/* Job Breakdown */}
-          <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl shadow-slate-100 relative overflow-hidden">
+          <GlassCard className="bg-white border-slate-100 shadow-xl shadow-slate-100 relative overflow-hidden" padding="p-10">
             <h3 className="text-xl font-black mb-8 flex items-center gap-3 text-slate-900">
               <Briefcase className="text-emerald-600" /> Profil Pekerjaan
             </h3>
@@ -142,7 +139,7 @@ export default function StatistikPage() {
                 );
               })}
             </div>
-          </div>
+          </GlassCard>
         </div>
 
         {/* Age Groups Summary */}

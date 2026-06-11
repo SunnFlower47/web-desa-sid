@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, FileText, ClipboardList, CheckCircle, 
@@ -10,6 +10,9 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
+import PageHeader from '@/components/ui/PageHeader';
+import Button from '@/components/ui/Button';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export default function LayananSurat() {
   const [step, setStep] = useState(1);
@@ -21,10 +24,6 @@ export default function LayananSurat() {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // Captcha State
-  const [captcha, setCaptcha] = useState({ q: "", a: 0 });
-  const [userCaptcha, setUserCaptcha] = useState("");
-
   // Form Data States
   const [nik, setNik] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
@@ -34,8 +33,13 @@ export default function LayananSurat() {
     telepon: "",
     keterangan: ""
   });
+  const [dynamicData, setDynamicData] = useState({});
   const [fileLampiran, setFileLampiran] = useState(null);
   const [successData, setSuccessData] = useState(null);
+  
+  // ReCAPTCHA State
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
 
   // Persistence: Load State on Mount
   useEffect(() => {
@@ -55,7 +59,6 @@ export default function LayananSurat() {
     
     setStep(1); // Always start fresh at step 1
     fetchSuratTypes();
-    generateCaptcha();
   }, []);
 
   // Persistence: Save State on Changes
@@ -84,16 +87,6 @@ export default function LayananSurat() {
     }
   };
 
-  const generateCaptcha = () => {
-    const n1 = Math.floor(Math.random() * 10) + 1;
-    const n2 = Math.floor(Math.random() * 10) + 1;
-    setCaptcha({
-      n1,
-      n2,
-      q: `${n1} + ${n2}`
-    });
-    setUserCaptcha("");
-  };
 
   const fetchSuratTypes = async () => {
     try {
@@ -138,10 +131,8 @@ export default function LayananSurat() {
   const handleSubmitForm = async (e) => {
     e.preventDefault();
 
-    // Validate Manual Captcha (Frontend Level)
-    if (parseInt(userCaptcha) !== (captcha.n1 + captcha.n2)) {
-      setError("Jawaban matematika salah. Silakan coba lagi.");
-      generateCaptcha();
+    if (!recaptchaToken) {
+      setError("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
       return;
     }
 
@@ -157,12 +148,17 @@ export default function LayananSurat() {
       data.append('nama_surat', selectedSurat.name);
       data.append('penduduk_id', pendudukData.id);
       data.append('tanggal_surat', new Date().toISOString().split('T')[0]);
-      data.append('keperluan', formData.keperluan);
+      
+      // Keperluan is usually needed, fallback if not available
+      data.append('keperluan', formData.keperluan || 'Pengajuan via Layanan Mandiri');
       data.append('telepon', formData.telepon);
       data.append('keterangan', formData.keterangan);
-      data.append('captcha_n1', captcha.n1);
-      data.append('captcha_n2', captcha.n2);
-      data.append('captcha_ans', userCaptcha);
+      
+      // Dynamic Form Data -> JSON String
+      if (Object.keys(dynamicData).length > 0) {
+        data.append('data_tambahan', JSON.stringify(dynamicData));
+      }
+
       
       if (fileLampiran) {
         data.append('file_lampiran', fileLampiran);
@@ -170,7 +166,8 @@ export default function LayananSurat() {
       
       const res = await api.post('/surat-pengajuan', data, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          'X-Recaptcha-Token': recaptchaToken
         }
       });
       
@@ -181,9 +178,13 @@ export default function LayananSurat() {
         sessionStorage.removeItem('surat_form_state');
       } else {
         setError(res.data.message || "Gagal mengirim pengajuan.");
+        if (recaptchaRef.current) recaptchaRef.current.reset();
+        setRecaptchaToken(null);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Terjadi kesalahan saat mengirim formulir.");
+      if (recaptchaRef.current) recaptchaRef.current.reset();
+      setRecaptchaToken(null);
     } finally {
       setSubmitting(false);
     }
@@ -256,38 +257,16 @@ export default function LayananSurat() {
   };
 
   return (
-    <main className="min-h-screen bg-white pb-20 pt-32 md:pt-40">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <Link href="/" className="inline-flex items-center text-slate-400 hover:text-emerald-700 mb-8 font-bold text-xs uppercase tracking-widest transition-colors">
-          <ArrowLeft size={16} className="mr-2" /> Kembali
-        </Link>
-        
-        {/* Header Section */}
-        <div className="max-w-3xl mb-12">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-4"
-          >
-            <Sparkles size={12} className="text-emerald-500" />
-            <span>Layanan Mandiri Warga</span>
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none"
-          >
-            Layanan <span className="text-emerald-700">Surat Digital</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-lg text-slate-500 font-medium leading-relaxed max-w-2xl"
-          >
-            Proses cepat, aman, dan tanpa antre. Urus kebutuhan administrasi kependudukan Anda secara mandiri di mana saja dan kapan saja.
-          </motion.p>
-        </div>
+    <main className="min-h-screen bg-white pb-20">
+      <PageHeader 
+        title={<>Layanan <span className="text-emerald-700">Surat Digital</span></>}
+        description="Proses cepat, aman, dan tanpa antre. Urus kebutuhan administrasi kependudukan Anda secara mandiri di mana saja dan kapan saja."
+        breadcrumbs={[
+          { label: 'Layanan' },
+          { label: 'Surat Online', href: '/layanan/surat' }
+        ]}
+      />
+      <div className="container mx-auto px-6 max-w-6xl mt-8">
 
         {/* Stepper UI */}
         <div className="flex justify-between mb-12 relative px-4 max-w-3xl mx-auto">
@@ -434,12 +413,17 @@ export default function LayananSurat() {
                         </div>
                       )}
 
-                      <button 
-                        disabled={verifying} type="submit"
-                        className="w-full py-5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black text-lg shadow-xl shadow-emerald-200/50 transition-all flex items-center justify-center gap-3 active:scale-95 mt-4"
+                      <Button 
+                        type="submit"
+                        disabled={verifying}
+                        isLoading={verifying}
+                        size="lg"
+                        className="w-full mt-4"
+                        icon={<ArrowRight size={22} />}
+                        iconPosition="right"
                       >
-                        {verifying ? <Loader2 className="animate-spin" /> : <>Mulai Pengajuan Surat <ArrowRight size={22} /></>}
-                      </button>
+                        {verifying ? "Memverifikasi..." : "Mulai Pengajuan Surat"}
+                      </Button>
                     </form>
                   </div>
 
@@ -566,15 +550,54 @@ export default function LayananSurat() {
                   <div className="lg:col-span-8">
                     <form onSubmit={handleSubmitForm} className="space-y-8">
                       <div className="grid grid-cols-1 gap-8">
-                        <div className="space-y-3">
-                          <label className="text-sm font-bold text-slate-700 ml-1">Keperluan Pembuatan Surat</label>
-                          <input 
-                            required type="text" value={formData.keperluan} 
-                            onChange={(e) => setFormData({...formData, keperluan: e.target.value})}
-                            placeholder="Contoh: Persyaratan Melamar Kerja di PT Maju Mundur"
-                            className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
-                          />
-                        </div>
+                        {/* Dynamic Forms / Default Keperluan */}
+                        {Array.isArray(selectedSurat?.form_json) && selectedSurat.form_json.length > 0 ? (
+                          selectedSurat.form_json.map((field, idx) => (
+                            <div key={idx} className="space-y-3">
+                              <label className="text-sm font-bold text-slate-700 ml-1">{field.label}</label>
+                              {field.type === 'textarea' ? (
+                                <textarea 
+                                  required 
+                                  value={dynamicData[field.name] || ''}
+                                  onChange={(e) => setDynamicData({...dynamicData, [field.name]: e.target.value})}
+                                  placeholder={`Masukkan ${field.label}`}
+                                  className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
+                                />
+                              ) : field.type === 'select' ? (
+                                <select 
+                                  required
+                                  value={dynamicData[field.name] || ''}
+                                  onChange={(e) => setDynamicData({...dynamicData, [field.name]: e.target.value})}
+                                  className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
+                                >
+                                  <option value="" disabled>Pilih {field.label}</option>
+                                  {field.options?.map((opt, i) => (
+                                    <option key={i} value={opt}>{opt}</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input 
+                                  required type={field.type || 'text'} 
+                                  value={dynamicData[field.name] || ''}
+                                  onChange={(e) => setDynamicData({...dynamicData, [field.name]: e.target.value})}
+                                  placeholder={`Masukkan ${field.label}`}
+                                  className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
+                                />
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="space-y-3">
+                            <label className="text-sm font-bold text-slate-700 ml-1">Keperluan Pembuatan Surat</label>
+                            <input 
+                              required type="text" value={formData.keperluan} 
+                              onChange={(e) => setFormData({...formData, keperluan: e.target.value})}
+                              placeholder="Contoh: Persyaratan Melamar Kerja di PT Maju Mundur"
+                              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
+                            />
+                          </div>
+                        )}
+                        
                         <div className="space-y-3">
                           <label className="text-sm font-bold text-slate-700 ml-1">Nomor WhatsApp Aktif</label>
                           <div className="relative">
@@ -627,21 +650,17 @@ export default function LayananSurat() {
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
                           ></textarea>
                         </div>
-                        <div className="space-y-3">
-                          <label className="text-sm font-bold text-slate-700 ml-1">Verifikasi Keamanan</label>
-                          <div className="flex items-center gap-4">
-                            <div className="px-6 py-4 bg-emerald-50 text-emerald-700 rounded-2xl font-black text-lg border border-emerald-100 min-w-[100px] text-center shadow-inner">
-                              {captcha.q} = ?
-                            </div>
-                            <input 
-                              required type="number" value={userCaptcha}
-                              onChange={(e) => setUserCaptcha(e.target.value)}
-                              placeholder="Jawaban"
-                              className="flex-1 px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
+                        
+                        {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                          <div className="space-y-3 flex flex-col items-start justify-center">
+                            <label className="text-sm font-bold text-slate-700 ml-1">Keamanan ReCAPTCHA</label>
+                            <ReCAPTCHA
+                              ref={recaptchaRef}
+                              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                              onChange={setRecaptchaToken}
                             />
                           </div>
-                          <p className="text-[10px] text-slate-400 font-bold ml-1 italic">* Jawab teka-teki matematika di atas untuk melanjutkan.</p>
-                        </div>
+                        )}
                       </div>
 
                       {error && (
@@ -652,18 +671,27 @@ export default function LayananSurat() {
                       )}
 
                       <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        <button 
-                          type="button" onClick={() => setStep(2)}
-                          className="px-8 py-5 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                        <Button 
+                          type="button" 
+                          onClick={() => setStep(2)}
+                          variant="outline"
+                          size="lg"
+                          className="bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                          icon={<ArrowLeft size={18} />}
                         >
-                          <ArrowLeft size={18} /> Batal
-                        </button>
-                        <button 
-                          disabled={submitting} type="submit"
-                          className="flex-1 py-5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-bold text-lg shadow-xl shadow-emerald-200/50 transition-all flex items-center justify-center gap-3"
+                          Batal
+                        </Button>
+                        <Button 
+                          type="submit"
+                          disabled={submitting}
+                          isLoading={submitting}
+                          size="lg"
+                          className="flex-1"
+                          icon={<Send size={20} />}
+                          iconPosition="right"
                         >
-                          {submitting ? <Loader2 className="animate-spin" /> : <>Kirim Pengajuan Surat <Send size={20} /></>}
-                        </button>
+                          {submitting ? "Mengirim..." : "Kirim Pengajuan Surat"}
+                        </Button>
                       </div>
                     </form>
                   </div>
@@ -698,10 +726,10 @@ export default function LayananSurat() {
                     <div className="flex flex-col items-center">
                       <div className="flex items-center justify-center gap-4">
                       <span className="text-4xl md:text-5xl font-mono font-black text-white tracking-tighter">
-                        {successData?.nomor_surat || "#CBT-2026-00452"}
+                        {successData?.nomor_resi || successData?.nomor_surat || "#CBT-2026-00452"}
                       </span>
                       <button 
-                        onClick={() => copyToClipboard(successData?.nomor_surat || "#CBT-2026-00452")}
+                        onClick={() => copyToClipboard(successData?.nomor_resi || successData?.nomor_surat || "#CBT-2026-00452")}
                         className={`p-3 rounded-xl transition-all active:scale-90 ${
                           copied ? 'bg-emerald-600 text-white' : 'bg-white/10 hover:bg-emerald-600 text-white'
                         }`}
@@ -726,25 +754,28 @@ export default function LayananSurat() {
                 </div>
 
                 <div className="flex flex-wrap gap-3 justify-center mb-8">
-                  {/* ... buttons ... */}
-                  <button 
+                  <Button 
                     onClick={() => setStep(1)}
-                    className="px-6 py-3.5 bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-200/50 hover:bg-emerald-800 transition-all flex items-center justify-center gap-2 text-sm"
+                    icon={<ArrowRight size={18} />}
+                    iconPosition="right"
                   >
-                    Ajukan Surat Lain <ArrowRight size={18} />
-                  </button>
-                  <Link 
+                    Ajukan Surat Lain
+                  </Button>
+                  <Button 
                     href="/layanan/status"
-                    className="px-6 py-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-md shadow-blue-200/50 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 text-sm"
+                    variant="secondary"
+                    className="bg-blue-600 hover:bg-blue-700 shadow-blue-200/50 text-white"
+                    icon={<Search size={18} />}
+                    iconPosition="right"
                   >
-                    Cek Status <Search size={18} />
-                  </Link>
-                  <Link 
+                    Cek Status
+                  </Button>
+                  <Button 
                     href="/"
-                    className="px-6 py-3.5 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all flex items-center justify-center text-sm"
+                    variant="ghost"
                   >
                     Beranda
-                  </Link>
+                  </Button>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl max-w-lg mx-auto">
