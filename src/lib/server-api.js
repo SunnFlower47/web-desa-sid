@@ -7,17 +7,11 @@ export function getTenantFromHost(host) {
   // Bersihkan port jika ada (misal localhost:3030 atau cibatu.sistem-desa-cibatu.test:3030)
   const hostname = host.split(':')[0];
   
-  // Daftar central domain
-  const centralDomains = process.env.NEXT_PUBLIC_CENTRAL_DOMAINS
-    ? process.env.NEXT_PUBLIC_CENTRAL_DOMAINS.split(',').map(d => d.trim())
-    : [
-        'sistem-desa-cibatu.test',
-        'diskominfo.sistem-desa-cibatu.test',
-        'admin.sistem-desa-cibatu.test',
-        'purwakarta.desa.id',
-        'diskominfo.purwakarta.desa.id',
-        'admin.purwakarta.desa.id'
-      ];
+  // Daftar central domain (sepenuhnya dibaca dari berkas .env)
+  const centralDomains = (process.env.NEXT_PUBLIC_CENTRAL_DOMAINS || '')
+    .split(',')
+    .map(d => d.trim())
+    .filter(Boolean);
   
   if (centralDomains.includes(hostname)) {
     return null;
