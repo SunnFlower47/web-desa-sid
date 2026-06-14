@@ -14,12 +14,11 @@ import StateMessage from '@/components/ui/StateMessage';
 import { useDesa } from '@/context/DesaContext';
 
 export default function ProfilDesaPage() {
-  const { namaDesa, namaDesaPendek } = useDesa();
+  const { namaDesa, namaDesaPendek, sosmed } = useDesa();
   const [data, setData] = useState({
     desa: null,
     statistics: null,
     struktur: null,
-    social_media: null
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,7 +40,6 @@ export default function ProfilDesaPage() {
           desa: desaData?.data?.desa || desaData?.data || null,
           statistics: statsData?.data || null,
           struktur: strukturData?.grouped || strukturData?.data || null,
-          social_media: desaData?.data?.social_media || null
         });
       } catch (err) {
         console.error("Gagal memuat profil desa:", err);
@@ -79,7 +77,7 @@ export default function ProfilDesaPage() {
     );
   }
 
-  const { desa, statistics, struktur, social_media } = data;
+  const { desa, statistics, struktur } = data;
 
   return (
     <main className="min-h-screen bg-slate-50 pb-20">
@@ -173,32 +171,38 @@ export default function ProfilDesaPage() {
             </div>
           </div>
           
-          {social_media && (social_media.facebook || social_media.instagram || social_media.youtube || social_media.whatsapp) && (
+          {sosmed && (sosmed.facebook || sosmed.instagram || sosmed.youtube || sosmed.whatsapp || sosmed.tiktok) && (
             <div className="mt-8 pt-8 border-t border-slate-100">
               <h4 className="font-bold text-slate-900 text-sm mb-4">Media Sosial Resmi</h4>
               <div className="flex flex-wrap gap-4">
-                {social_media.facebook && (
-                  <a href={social_media.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-100 transition-colors">
-                    <Share2 size={18} />
+                {sosmed.facebook && (
+                  <a href={sosmed.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 bg-blue-50 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-100 transition-colors">
+                    <img src="/assets/icon/facebook/facebook-new-2019-seeklogo-2.svg" alt="Facebook" className="w-[18px] h-[18px] object-contain" />
                     <span className="text-sm font-medium">Facebook</span>
                   </a>
                 )}
-                {social_media.instagram && (
-                  <a href={social_media.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-pink-50 text-pink-600 px-4 py-2 rounded-full hover:bg-pink-100 transition-colors">
-                    <Camera size={18} />
+                {sosmed.instagram && (
+                  <a href={sosmed.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 bg-pink-50 text-pink-600 px-4 py-2 rounded-full hover:bg-pink-100 transition-colors">
+                    <img src="/assets/icon/instagaram/instagram-new-2016-seeklogo.png" alt="Instagram" className="w-[18px] h-[18px] object-contain" />
                     <span className="text-sm font-medium">Instagram</span>
                   </a>
                 )}
-                {social_media.youtube && (
-                  <a href={social_media.youtube} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-full hover:bg-red-100 transition-colors">
-                    <PlayCircle size={18} />
+                {sosmed.youtube && (
+                  <a href={sosmed.youtube} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 bg-red-50 text-red-600 px-4 py-2 rounded-full hover:bg-red-100 transition-colors">
+                    <img src="/assets/icon/youtube/youtube-2017-icon-seeklogo-3.svg" alt="YouTube" className="w-[18px] h-[18px] object-contain" />
                     <span className="text-sm font-medium">YouTube</span>
                   </a>
                 )}
-                {social_media.whatsapp && (
-                  <a href={social_media.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-100 transition-colors">
-                    <MessageCircle size={18} />
+                {sosmed.whatsapp && (
+                  <a href={sosmed.whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 bg-emerald-50 text-emerald-600 px-4 py-2 rounded-full hover:bg-emerald-100 transition-colors">
+                    <img src="/assets/icon/whatsapp/whatsapp-icon-seeklogo.svg" alt="WhatsApp" className="w-[18px] h-[18px] object-contain" />
                     <span className="text-sm font-medium">WhatsApp</span>
+                  </a>
+                )}
+                {sosmed.tiktok && (
+                  <a href={sosmed.tiktok} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 bg-slate-50 text-slate-800 px-4 py-2 rounded-full hover:bg-slate-100 transition-colors">
+                    <img src="/assets/icon/tiktok/tiktok-seeklogo.png" alt="TikTok" className="w-[18px] h-[18px] object-contain" />
+                    <span className="text-sm font-medium">TikTok</span>
                   </a>
                 )}
               </div>
