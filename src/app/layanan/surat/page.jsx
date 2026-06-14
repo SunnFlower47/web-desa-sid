@@ -13,6 +13,8 @@ import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import ReCAPTCHA from 'react-google-recaptcha';
+import KematianForm from './components/KematianForm';
+import DomisiliForm from './components/DomisiliForm';
 
 export default function LayananSurat() {
   const [step, setStep] = useState(1);
@@ -79,8 +81,15 @@ export default function LayananSurat() {
   // Handle Surat Selection with Auto-Skip Logic
   const handleSelectSurat = (surat) => {
     setSelectedSurat(surat);
+    
+    // Deteksi cerdas: Jika nama surat mengandung "domisili"
+    const isDomisili = surat.name?.toLowerCase().includes('domisili') || surat.id === 'keterangan-domisili';
+    
     // If user is already verified in this session, skip step 2
     if (pendudukData && nik && tanggalLahir) {
+      setStep(3);
+    } else if (isDomisili) {
+      // Domisili does not require NIK verification
       setStep(3);
     } else {
       setStep(2);
@@ -142,16 +151,26 @@ export default function LayananSurat() {
     try {
       // Use FormData for Multipart/Form-Data (to handle PDF Upload)
       const data = new FormData();
-      data.append('nik', nik);
-      data.append('tanggal_lahir', tanggalLahir);
+      
+      // Send NIK and Penduduk ID if available, otherwise it's Domisili where it's bypassed
+      if (nik) data.append('nik', nik);
+      if (tanggalLahir) data.append('tanggal_lahir', tanggalLahir);
+      if (pendudukData?.id) data.append('penduduk_id', pendudukData.id);
+
       data.append('surat_type', selectedSurat.id);
       data.append('nama_surat', selectedSurat.name);
-      data.append('penduduk_id', pendudukData.id);
       data.append('tanggal_surat', new Date().toISOString().split('T')[0]);
       
       // Keperluan is usually needed, fallback if not available
       data.append('keperluan', formData.keperluan || 'Pengajuan via Layanan Mandiri');
-      data.append('telepon', formData.telepon);
+      
+      if (formData.email) {
+        data.append('email_pengaju', formData.email);
+      }
+      if (formData.telepon) {
+        data.append('no_hp_pengaju', formData.telepon);
+      }
+      
       data.append('keterangan', formData.keterangan);
       
       // Dynamic Form Data -> JSON String
@@ -551,7 +570,11 @@ export default function LayananSurat() {
                     <form onSubmit={handleSubmitForm} className="space-y-8">
                       <div className="grid grid-cols-1 gap-8">
                         {/* Dynamic Forms / Default Keperluan */}
-                        {Array.isArray(selectedSurat?.form_json) && selectedSurat.form_json.length > 0 ? (
+                        {selectedSurat?.id === 'kematian' ? (
+                          <KematianForm dynamicData={dynamicData} setDynamicData={setDynamicData} />
+                        ) : selectedSurat?.id === 'keterangan-domisili' ? (
+                          <DomisiliForm dynamicData={dynamicData} setDynamicData={setDynamicData} />
+                        ) : Array.isArray(selectedSurat?.form_json) && selectedSurat.form_json.length > 0 ? (
                           selectedSurat.form_json.map((field, idx) => (
                             <div key={idx} className="space-y-3">
                               <label className="text-sm font-bold text-slate-700 ml-1">{field.label}</label>
@@ -726,10 +749,10 @@ export default function LayananSurat() {
                     <div className="flex flex-col items-center">
                       <div className="flex items-center justify-center gap-4">
                       <span className="text-4xl md:text-5xl font-mono font-black text-white tracking-tighter">
-                        {successData?.nomor_resi || successData?.nomor_surat || "#CBT-2026-00452"}
+                        {successData?.nomor_pengajuan || successData?.nomor_surat || "#CBT-2026-00452"}
                       </span>
                       <button 
-                        onClick={() => copyToClipboard(successData?.nomor_resi || successData?.nomor_surat || "#CBT-2026-00452")}
+                        onClick={() => copyToClipboard(successData?.nomor_pengajuan || successData?.nomor_surat || "#CBT-2026-00452")}
                         className={`p-3 rounded-xl transition-all active:scale-90 ${
                           copied ? 'bg-emerald-600 text-white' : 'bg-white/10 hover:bg-emerald-600 text-white'
                         }`}

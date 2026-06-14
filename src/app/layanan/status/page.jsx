@@ -14,12 +14,14 @@ import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import GlassCard from '@/components/ui/GlassCard';
 import StateMessage from '@/components/ui/StateMessage';
+import { useDesa } from '@/context/DesaContext';
 
 export default function CekStatusSurat() {
+  const { namaDesaPendek } = useDesa();
   const [searchMode, setSearchMode] = useState("nomor"); // "nomor" or "nik"
   const [nik, setNik] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
-  const [nomorSurat, setNomorSurat] = useState("");
+  const [nomorResi, setNomorResi] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
@@ -40,9 +42,9 @@ export default function CekStatusSurat() {
           tanggal_lahir: tanggalLahir
         });
       } else {
-        // Cek Spesifik pakai Nomor Surat + NIK
+        // Cek Spesifik pakai Nomor Resi/Surat + NIK
         res = await api.get('/surat-status', {
-          params: { nik, nomor_surat: nomorSurat }
+          params: { nik, nomor_surat: nomorResi }
         });
       }
 
@@ -103,7 +105,7 @@ export default function CekStatusSurat() {
             onClick={() => { setSearchMode('nomor'); setResults([]); setError(null); }}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${searchMode === 'nomor' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-400'}`}
           >
-            <Search size={14} /> Nomor Surat
+            <Search size={14} /> Nomor Pengajuan
           </button>
           <button 
             onClick={() => { setSearchMode('nik'); setResults([]); setError(null); }}
@@ -147,8 +149,8 @@ export default function CekStatusSurat() {
                   <div className="relative">
                     <FileText className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
                     <input 
-                      required type="text" value={nomorSurat} onChange={(e) => setNomorSurat(e.target.value)}
-                      placeholder="Contoh: CBT-2026-XXXXX"
+                      required type="text" value={nomorResi} onChange={(e) => setNomorResi(e.target.value)}
+                      placeholder="Contoh: REQ-260613-XXXX"
                       className="w-full pl-14 pr-6 py-6 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all text-xl md:text-2xl font-black tracking-widest text-slate-900 uppercase"
                     />
                   </div>
@@ -212,7 +214,7 @@ export default function CekStatusSurat() {
                             <FileText size={20} />
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{surat.nomor_surat || surat.nomor_resi}</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{surat.nomor_surat || surat.nomor_pengajuan}</p>
                             <h3 className="text-lg font-black text-slate-900 tracking-tight leading-none">{surat.jenis_surat_nama}</h3>
                           </div>
                         </div>
@@ -274,7 +276,7 @@ export default function CekStatusSurat() {
         {!results.length && !searching && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10 opacity-30">
             <ShieldCheck size={40} className="mx-auto mb-4 text-slate-300" />
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Tracking System Desa Cibatu</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Tracking System Desa {namaDesaPendek}</p>
           </motion.div>
         )}
       </div>

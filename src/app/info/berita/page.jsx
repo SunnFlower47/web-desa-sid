@@ -8,8 +8,10 @@ import api, { getImageUrl } from '@/lib/api';
 import PageHeader from '@/components/ui/PageHeader';
 import StateMessage from '@/components/ui/StateMessage';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
+import { useDesa } from '@/context/DesaContext';
 
 export default function BeritaPage() {
+  const { namaDesaPendek } = useDesa();
   const [news, setNews] = useState([]);
   const [eksternalNews, setEksternalNews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,9 +61,9 @@ export default function BeritaPage() {
       <PageHeader 
         title={
           <>Kabar Terbaru dari <br />
-          <span className="text-emerald-700">Desa Cibatu</span></>
+          <span className="text-emerald-700">Desa {namaDesaPendek}</span></>
         }
-        description="Informasi resmi mengenai kegiatan, pembangunan, pengumuman penting, hingga kabar terkini seputar warga Desa Cibatu."
+        description={`Informasi resmi mengenai kegiatan, pembangunan, pengumuman penting, hingga kabar terkini seputar warga Desa ${namaDesaPendek}.`}
         breadcrumbs={[
           { label: 'Informasi' },
           { label: 'Warta & Kabar Desa', href: '/info/berita' }

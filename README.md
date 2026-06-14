@@ -56,7 +56,7 @@ INTERNAL_API_URL=https://admin.pemdescibatu2001.online
 NEXT_PUBLIC_API_URL=https://admin.pemdescibatu2001.online/api/proxy/v1
 
 # Kunci Keamanan Proxy antara Next.js dan Laravel
-NEXT_PUBLIC_PROXY_KEY=CIBATU_VIBE_2026
+NEXT_PROXY_KEY=CIBATU_VIBE_2026
 
 # Site URL Utama
 NEXT_PUBLIC_SITE_URL=https://cibatu-vibe-ai-505268805663.asia-southeast2.run.app

@@ -6,6 +6,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Store, Building2, MapPin, Navigation } from 'lucide-react';
 import { getImageUrl } from '@/lib/api';
+import { useDesa } from '@/context/DesaContext';
 
 // Fix Leaflet's default icon path issues in Next.js
 delete L.Icon.Default.prototype._getIconUrl;
@@ -66,10 +67,13 @@ export default function MapViewer({
   activeFilter = 'all',
   onMarkerClick
 }) {
+  const { desa } = useDesa();
   const [map, setMap] = useState(null);
 
-  // Default center to Cibatu, Garut (approximate)
-  const defaultCenter = [-7.0858, 107.9942];
+  // Default center to configured coordinates, fallback to Cibatu
+  const lat = desa?.latitude ? parseFloat(desa.latitude) : -7.0858;
+  const lng = desa?.longitude ? parseFloat(desa.longitude) : 107.9942;
+  const defaultCenter = [lat, lng];
 
   // Adjust map bounds when GeoJSON loads
   useEffect(() => {

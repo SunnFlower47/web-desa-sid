@@ -11,8 +11,10 @@ import PageHeader from '@/components/ui/PageHeader';
 import GlassCard from '@/components/ui/GlassCard';
 import SectionTitle from '@/components/ui/SectionTitle';
 import StateMessage from '@/components/ui/StateMessage';
+import { useDesa } from '@/context/DesaContext';
 
 export default function ProfilDesaPage() {
+  const { namaDesa, namaDesaPendek } = useDesa();
   const [data, setData] = useState({
     desa: null,
     statistics: null,
@@ -82,7 +84,7 @@ export default function ProfilDesaPage() {
   return (
     <main className="min-h-screen bg-slate-50 pb-20">
       <PageHeader 
-        title={<>Profil <span className="text-emerald-700">Desa Cibatu</span></>}
+        title={<>Profil <span className="text-emerald-700">Desa {namaDesaPendek}</span></>}
         description="Informasi lengkap mengenai data kependudukan, wilayah, dan struktur organisasi Pemerintah Desa."
         breadcrumbs={[
           { label: 'Informasi' },
@@ -126,7 +128,7 @@ export default function ProfilDesaPage() {
         </div>
 
         {/* Info Desa */}
-        <SectionTitle title="Informasi Desa" subtitle="Data dan kontak resmi pemerintah Desa Cibatu" />
+        <SectionTitle title="Informasi Desa" subtitle={`Data dan kontak resmi pemerintah ${namaDesa}`} />
         <GlassCard className="mb-24" padding="p-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
@@ -205,7 +207,7 @@ export default function ProfilDesaPage() {
         </GlassCard>
 
         {/* Struktur Organisasi */}
-        <SectionTitle title="Struktur Pemerintahan" subtitle="Aparatur Desa Cibatu yang siap melayani masyarakat" />
+        <SectionTitle title="Struktur Pemerintahan" subtitle={`Aparatur ${namaDesa} yang siap melayani masyarakat`} />
         
         {struktur ? (
           (() => {

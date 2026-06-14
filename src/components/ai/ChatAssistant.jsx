@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, X, MessageSquare, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
+import { useDesa } from '@/context/DesaContext';
 
 export default function ChatAssistant() {
+  const { desa, namaDesaPendek } = useDesa();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'model', text: 'Halo Warga Cibatu! Saya Asisten Digital Desa. Ada yang bisa saya bantu hari ini?' }
+    { role: 'model', text: `Halo Warga ${namaDesaPendek}! Saya Asisten Digital Desa. Ada yang bisa saya bantu hari ini?` }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +22,17 @@ export default function ChatAssistant() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (desa?.ai_greeting) {
+      setMessages(prev => {
+        if (prev.length === 1 && prev[0].role === 'model' && prev[0].text.startsWith('Halo Warga')) {
+          return [{ role: 'model', text: desa.ai_greeting }];
+        }
+        return prev;
+      });
+    }
+  }, [desa?.ai_greeting]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -74,7 +87,7 @@ export default function ChatAssistant() {
                   <Bot size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">Asisten Desa Cibatu</h3>
+                  <h3 className="font-bold text-sm">Asisten {namaDesaPendek}</h3>
                   <p className="text-[10px] text-white/70">Online • Didukung Gemini AI</p>
                 </div>
               </div>

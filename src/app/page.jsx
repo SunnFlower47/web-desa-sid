@@ -14,6 +14,7 @@ import Image from 'next/image';
 import api, { getImageUrl } from '@/lib/api';
 import Button from '@/components/ui/Button';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { useDesa } from '@/context/DesaContext';
 
 const slides = [
   {
@@ -43,6 +44,7 @@ const slides = [
 ];
 
 export default function Home() {
+  const { namaDesa, namaDesaPendek, kabupaten, logoDesa } = useDesa();
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [isTestiModalOpen, setIsTestiModalOpen] = React.useState(false);
   const [testiForm, setTestiForm] = React.useState({ nama: '', instansi: '', isi: '', rating: 5 });
@@ -177,11 +179,11 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-3 mb-10"
               >
-                <div className="w-12 h-12 rounded-2xl glass flex items-center justify-center p-2 border-emerald-500/20">
-                  <img src="/assets/images/logo-desa-cibatu.png" alt="Logo" className="w-full h-full object-contain" />
+                <div className="w-12 h-12 rounded-2xl glass flex items-center justify-center p-2 border-emerald-500/20 bg-white">
+                  <img src={logoDesa} alt={`Logo ${namaDesaPendek}`} className="w-full h-full object-contain" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-white font-black text-lg tracking-tight leading-none italic uppercase">Desa Digital</span>
+                  <span className="text-white font-black text-lg tracking-tight leading-none italic uppercase">{namaDesaPendek} Digital</span>
                   <span className="text-emerald-400 text-[8px] font-black uppercase tracking-[0.4em]">Smart Village Ecosystem</span>
                 </div>
               </motion.div>
@@ -350,7 +352,7 @@ export default function Home() {
             <BentoCard 
               className="md:col-span-4 md:row-span-1"
               title="Warta & Kabar Desa"
-              desc="Update terkini kegiatan dan pengumuman resmi Desa Cibatu."
+              desc={`Update terkini kegiatan dan pengumuman resmi Desa ${namaDesaPendek}.`}
               icon={<Newspaper size={32} />}
               href="/info/berita"
               variant="glass"
@@ -370,7 +372,7 @@ export default function Home() {
             <BentoCard 
               className="md:col-span-4 md:row-span-2"
               title="Aspirasi & Pengaduan"
-              desc="Suarakan aspirasi Anda untuk kemajuan Desa Cibatu."
+              desc={`Suarakan aspirasi Anda untuk kemajuan Desa ${namaDesaPendek}.`}
               icon={<Megaphone size={32} />}
               href="/layanan/pengaduan"
               variant="glass"
@@ -528,7 +530,7 @@ export default function Home() {
                 ✕
               </button>
               <h3 className="text-2xl font-black tracking-tight mb-2">Kirim <span className="text-emerald-600">Testimoni</span></h3>
-              <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan Desa Digital Cibatu.</p>
+              <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan {namaDesa} Digital.</p>
               
               <form onSubmit={handleTestiSubmit} className="space-y-4">
                 <div>

@@ -57,8 +57,13 @@ export const getImageUrl = (path) => {
     return path;
   }
 
-  // Bersihkan path dari awalan 'storage/' jika ada
-  const cleanPath = path.startsWith('storage/') ? path.replace('storage/', '') : path;
+  // Bersihkan path dari awalan 'storage/' atau '/storage/' jika ada
+  let cleanPath = path;
+  if (path.startsWith('/storage/')) {
+    cleanPath = path.replace('/storage/', '');
+  } else if (path.startsWith('storage/')) {
+    cleanPath = path.replace('storage/', '');
+  }
 
   // Gunakan Next.js storage proxy
   return `/api/storage/${cleanPath}`;
@@ -76,6 +81,11 @@ export const getFasilitasDesa = async (params = {}) => {
 
 export const getVillageGeoJson = async () => {
   const response = await api.get('/geojson');
+  return response.data;
+};
+
+export const getPublicDesaInfo = async () => {
+  const response = await api.get('/public-statistics/info-desa');
   return response.data;
 };
 

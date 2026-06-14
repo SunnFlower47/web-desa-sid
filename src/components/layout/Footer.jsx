@@ -24,29 +24,21 @@ const YoutubeIcon = ({ size = 24, className = "" }) => (
     <path d="m10 15 5-3-5-3z"/>
   </svg>
 );
-import api from '@/lib/api';
+import { useDesa } from '@/context/DesaContext';
 
 export default function Footer() {
-  const [social, setSocial] = useState({
-    facebook: null,
-    instagram: null,
-    whatsapp: null,
-    youtube: null
-  });
+  const { namaDesa, namaDesaPendek, kabupaten, logoDesa, sosmed } = useDesa();
+  
+  // Use sosmed mapping to match what's expected
+  const social = {
+    facebook: sosmed?.facebook,
+    instagram: sosmed?.instagram,
+    whatsapp: sosmed?.whatsapp,
+    youtube: sosmed?.youtube,
+    tiktok: sosmed?.tiktok
+  };
 
-  useEffect(() => {
-    const fetchInfo = async () => {
-      try {
-        const res = await api.get('/public-statistics/info-desa');
-        if (res?.data?.success && res.data.data?.social) {
-          setSocial(res.data.data.social);
-        }
-      } catch (err) {
-        console.error('Failed to fetch desa info', err);
-      }
-    };
-    fetchInfo();
-  }, []);
+
 
   return (
     <footer className="bg-slate-950 text-white pt-20 pb-10 border-t border-white/5">
@@ -54,13 +46,13 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-12 mb-16">
           <div>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg glow-primary">
-                <Landmark size={20} />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg overflow-hidden bg-white p-1">
+                <img src={logoDesa} alt={`Logo ${namaDesa}`} className="w-full h-full object-contain" />
               </div>
-              <span className="font-black text-xl tracking-tighter italic">Desa<span className="text-emerald-500">Cibatu</span></span>
+              <span className="font-black text-xl tracking-tighter italic">Desa<span className="text-emerald-500">{namaDesaPendek}</span></span>
             </div>
             <p className="text-slate-400 text-sm max-w-sm leading-relaxed">
-              Membangun ekosistem pemerintahan desa yang cerdas, transparan, dan inovatif di Kabupaten Purwakarta.
+              Membangun ekosistem pemerintahan desa yang cerdas, transparan, dan inovatif di Kabupaten {kabupaten}.
             </p>
             
             {/* Social Links */}
@@ -68,28 +60,33 @@ export default function Footer() {
               <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-[0.2em] mb-4">Sosial Media Resmi Desa</p>
               <div className="flex items-center gap-4">
                 {social.facebook && (
-                  <a href={social.facebook} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all overflow-hidden p-1.5">
-                    <FacebookIcon size={18} />
+                  <a href={social.facebook} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:scale-110 transition-all overflow-hidden p-1.5 shadow-sm">
+                    <img src="/assets/icon/facebook/facebook-new-2019-seeklogo-2.svg" alt="Facebook" className="w-full h-full object-contain" />
                   </a>
                 )}
                 {social.instagram && (
-                  <a href={social.instagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all overflow-hidden p-1.5">
-                    <InstagramIcon size={18} />
+                  <a href={social.instagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:scale-110 transition-all overflow-hidden p-1.5 shadow-sm">
+                    <img src="/assets/icon/instagaram/instagram-new-2016-seeklogo.png" alt="Instagram" className="w-full h-full object-contain" />
                   </a>
                 )}
                 {social.whatsapp && (
-                  <a href={social.whatsapp} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all overflow-hidden p-1.5">
-                    <MessageCircle size={18} />
+                  <a href={social.whatsapp} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:scale-110 transition-all overflow-hidden p-1.5 shadow-sm">
+                    <img src="/assets/icon/whatsapp/whatsapp-icon-seeklogo.svg" alt="WhatsApp" className="w-full h-full object-contain" />
                   </a>
                 )}
                 {social.youtube && (
-                  <a href={social.youtube} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 hover:bg-emerald-500 hover:text-white transition-all overflow-hidden p-1.5">
-                    <YoutubeIcon size={18} />
+                  <a href={social.youtube} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:scale-110 transition-all overflow-hidden p-1.5 shadow-sm">
+                    <img src="/assets/icon/youtube/youtube-2017-icon-seeklogo-3.svg" alt="YouTube" className="w-full h-full object-contain" />
+                  </a>
+                )}
+                {social.tiktok && (
+                  <a href={social.tiktok} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 hover:scale-110 transition-all overflow-hidden p-1.5 shadow-sm">
+                    <img src="/assets/icon/tiktok/tiktok-seeklogo.png" alt="TikTok" className="w-full h-full object-contain" />
                   </a>
                 )}
                 
                 {/* Fallback if no social media */}
-                {(!social.facebook && !social.instagram && !social.whatsapp && !social.youtube) && (
+                {(!social.facebook && !social.instagram && !social.whatsapp && !social.youtube && !social.tiktok) && (
                   <p className="text-xs text-slate-500 italic">Belum ada tautan sosial media</p>
                 )}
               </div>
@@ -117,8 +114,8 @@ export default function Footer() {
         </div>
         
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-center items-center gap-6">
-          <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">
-            &copy; {new Date().getFullYear()} Pemerintah Desa Cibatu Purwakarta.
+          <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest text-center">
+            &copy; {new Date().getFullYear()} Pemerintah {namaDesa} {kabupaten}.
           </p>
         </div>
       </div>

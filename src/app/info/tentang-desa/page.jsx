@@ -9,13 +9,29 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import GlassCard from '@/components/ui/GlassCard';
 import SectionTitle from '@/components/ui/SectionTitle';
+import { useDesa } from '@/context/DesaContext';
 
 export default function TentangDesaPage() {
+  const { desa, namaDesa, namaDesaPendek, kabupaten } = useDesa();
+
+  const sejarahDesa = desa?.sejarah || `${namaDesa} adalah desa yang terletak di Kabupaten ${kabupaten}, Provinsi ${desa?.provinsi || 'Jawa Barat'}. Didirikan pada tahun ${desa?.tahun_berdiri || '1860'} dengan kepala desa pertama ${desa?.kepala_desa_pertama || 'Ki Arpan'}, desa ini berkembang dari daerah agraris menjadi sentra ${desa?.karakteristik_desa?.toLowerCase() || 'industri'} dengan keragaman penduduk yang tinggi dari berbagai suku dan budaya.`;
+
+  const visiDesa = desa?.visi || `Terwujudnya ${namaDesa} yang maju, mandiri, sejahtera, dan berkelanjutan melalui peningkatan kualitas sumber daya manusia, pengembangan ekonomi kerakyatan, dan pelestarian lingkungan hidup.`;
+
+  const listMisi = desa?.misi
+    ? desa.misi.split('\n').map(item => item.replace(/^\d+[\.\s\-]+/, '').trim()).filter(Boolean)
+    : [
+        "Meningkatkan kualitas pelayanan publik yang transparan dan akuntabel",
+        "Mengembangkan ekonomi kerakyatan berbasis potensi lokal",
+        "Meningkatkan kualitas pendidikan dan kesehatan masyarakat",
+        "Melestarikan nilai-nilai budaya dan gotong royong"
+      ];
+
   return (
     <main className="min-h-screen bg-slate-50 pb-20">
       <PageHeader 
-        title={<>Tentang <span className="text-emerald-700">Desa Cibatu</span></>}
-        description="Pelajari sejarah, visi misi, dan perkembangan Desa Cibatu dari daerah agraris menjadi sentra industri dengan keragaman budaya."
+        title={<>Tentang <span className="text-emerald-700">Desa {namaDesaPendek}</span></>}
+        description={`Pelajari sejarah, visi misi, dan perkembangan Desa ${namaDesaPendek} dari daerah agraris menjadi sentra industri dengan keragaman budaya.`}
         breadcrumbs={[
           { label: 'Informasi' },
           { label: 'Tentang Desa', href: '/info/tentang-desa' }
@@ -30,11 +46,9 @@ export default function TentangDesaPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-lg md:text-xl text-slate-600 leading-relaxed"
+            className="text-lg md:text-xl text-slate-600 leading-relaxed whitespace-pre-line"
           >
-            Desa Cibatu adalah desa yang terletak di Kecamatan Cibatu, Kabupaten Purwakarta, Provinsi Jawa Barat.
-            Didirikan pada tahun 1860 dengan kepala desa pertama Ki Arpan, desa ini berkembang dari daerah agraris
-            menjadi sentra industri dengan keragaman penduduk yang tinggi dari berbagai suku dan budaya.
+            {sejarahDesa}
           </motion.p>
         </div>
 
@@ -80,7 +94,7 @@ export default function TentangDesaPage() {
         {/* Visi Misi */}
         <SectionTitle 
           title="Arah & Tujuan" 
-          subtitle="Landasan kami dalam membangun dan memajukan Desa Cibatu"
+          subtitle={`Landasan kami dalam membangun dan memajukan Desa ${namaDesaPendek}`}
         />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24">
           <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
@@ -95,11 +109,11 @@ export default function TentangDesaPage() {
               </div>
               
               <blockquote className="text-xl md:text-2xl text-slate-700 font-medium leading-relaxed relative z-10 italic">
-                "Terwujudnya Desa Cibatu yang maju, mandiri, sejahtera, dan berkelanjutan melalui peningkatan kualitas sumber daya manusia, pengembangan ekonomi kerakyatan, dan pelestarian lingkungan hidup."
+                "{visiDesa}"
               </blockquote>
             </div>
           </motion.div>
-
+ 
           <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <GlassCard className="h-full border-slate-200" padding="p-8 md:p-12">
               <div className="flex items-center gap-4 mb-8">
@@ -110,12 +124,7 @@ export default function TentangDesaPage() {
               </div>
               
               <ul className="space-y-6 relative z-10">
-                {[
-                  "Meningkatkan kualitas pelayanan publik yang transparan dan akuntabel",
-                  "Mengembangkan ekonomi kerakyatan berbasis potensi lokal",
-                  "Meningkatkan kualitas pendidikan dan kesehatan masyarakat",
-                  "Melestarikan nilai-nilai budaya dan gotong royong"
-                ].map((misi, i) => (
+                {listMisi.map((misi, i) => (
                   <li key={i} className="flex gap-4 items-start group">
                     <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-black text-sm shrink-0 border border-emerald-100 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all">
                       {i + 1}
@@ -133,14 +142,14 @@ export default function TentangDesaPage() {
         {/* Profil Singkat (Mini Stats) */}
         <SectionTitle 
           title="Fakta Singkat" 
-          subtitle="Sekilas info mengenai profil dasar Desa Cibatu"
+          subtitle={`Sekilas info mengenai profil dasar Desa ${namaDesaPendek}`}
         />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-12">
           {[
-            { title: "Tahun Berdiri", value: "1860", icon: <Calendar />, color: "text-blue-600", bg: "bg-blue-50" },
-            { title: "Kepala Desa I", value: "Ki Arpan", icon: <History />, color: "text-rose-600", bg: "bg-rose-50" },
-            { title: "Lokasi", value: "Purwakarta", icon: <MapPin />, color: "text-emerald-600", bg: "bg-emerald-50" },
-            { title: "Karakteristik", value: "Industri", icon: <Building />, color: "text-amber-600", bg: "bg-amber-50" },
+            { title: "Tahun Berdiri", value: desa?.tahun_berdiri || "1860", icon: <Calendar />, color: "text-blue-600", bg: "bg-blue-50" },
+            { title: "Kepala Desa I", value: desa?.kepala_desa_pertama || "Ki Arpan", icon: <History />, color: "text-rose-600", bg: "bg-rose-50" },
+            { title: "Lokasi", value: kabupaten || "Purwakarta", icon: <MapPin />, color: "text-emerald-600", bg: "bg-emerald-50" },
+            { title: "Karakteristik", value: desa?.karakteristik_desa || "Industri", icon: <Building />, color: "text-amber-600", bg: "bg-amber-50" },
           ].map((stat, idx) => (
             <motion.div 
               key={idx}

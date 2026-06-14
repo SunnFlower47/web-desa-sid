@@ -10,8 +10,10 @@ import StateMessage from '@/components/ui/StateMessage';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import GlassCard from '@/components/ui/GlassCard';
 import SectionTitle from '@/components/ui/SectionTitle';
+import { useDesa } from '@/context/DesaContext';
 
 export default function BeritaDetail({ params }) {
+  const { namaDesaPendek } = useDesa();
   // Next 15 requires unwrapping params Promise
   const resolvedParams = React.use(params);
   const { slug } = resolvedParams;
@@ -104,7 +106,7 @@ export default function BeritaDetail({ params }) {
           </span>
           <div className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-white px-4 py-2 rounded-xl border border-slate-100 inline-flex shadow-sm">
             <User size={14} className="text-emerald-600" /> 
-            <span>Oleh: <span className="font-bold text-slate-900">{berita.author?.name || 'Admin Desa Cibatu'}</span></span>
+            <span>Oleh: <span className="font-bold text-slate-900">{berita.author?.name || `Admin Desa ${namaDesaPendek}`}</span></span>
           </div>
         </div>
 

@@ -5,8 +5,10 @@ import { motion } from 'framer-motion';
 import { Shield, FileText, Users, Lock, Eye, CheckCircle, AlertTriangle, ArrowLeft, Info } from 'lucide-react';
 import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
+import { useDesa } from '@/context/DesaContext';
 
 export default function KebijakanDataPage() {
+  const { namaDesaPendek } = useDesa();
   const sections = [
     {
       id: 'tujuan',
@@ -92,7 +94,7 @@ export default function KebijakanDataPage() {
     <main className="min-h-screen bg-white pb-20">
       <PageHeader 
         title={<>Kebijakan <br/> <span className="text-emerald-700">Data Desa</span></>}
-        description="Transparansi, akuntabilitas, dan perlindungan privasi data warga dalam ekosistem pemerintahan Desa Cibatu."
+        description={`Transparansi, akuntabilitas, dan perlindungan privasi data warga dalam ekosistem pemerintahan Desa ${namaDesaPendek}.`}
         breadcrumbs={[
           { label: 'Informasi' },
           { label: 'Kebijakan Data', href: '/kebijakan-data' }
@@ -113,7 +115,7 @@ export default function KebijakanDataPage() {
           <div>
             <h2 className="text-xl font-black text-slate-900 mb-4">Tentang Kebijakan Data</h2>
             <p className="text-slate-600 font-medium leading-relaxed mb-4">
-              Kebijakan Data Desa Cibatu merupakan pedoman dalam pengelolaan, penyimpanan, dan akses
+              Kebijakan Data Desa {namaDesaPendek} merupakan pedoman dalam pengelolaan, penyimpanan, dan akses
               terhadap data dan informasi publik. Kebijakan ini dibuat untuk memastikan transparansi
               pemerintahan desa sambil tetap melindungi privasi dan keamanan data warga.
             </p>
@@ -232,13 +234,13 @@ export default function KebijakanDataPage() {
               <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest mb-6">Hubungi petugas PPID desa</p>
               <div className="space-y-4 text-xs font-semibold text-slate-300">
                 <p>
-                  <strong className="text-white">Alamat:</strong> Jl. Cibatu Km. 15, Desa Cibatu, Kec. Cibatu, Kab. Purwakarta, Jawa Barat 41161
+                  <strong className="text-white">Alamat:</strong> Kantor Kepala Desa {namaDesaPendek}
                 </p>
                 <p>
-                  <strong className="text-white">Email:</strong> desacibatu.2001@gmail.com
+                  <strong className="text-white">Email:</strong> admin@{namaDesaPendek.toLowerCase()}.desa.id
                 </p>
                 <p>
-                  <strong className="text-white">Telepon:</strong> +62 838-7982-7147
+                  <strong className="text-white">Telepon:</strong> -
                 </p>
               </div>
             </div>

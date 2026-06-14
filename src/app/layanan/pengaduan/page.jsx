@@ -14,8 +14,10 @@ import GlassCard from '@/components/ui/GlassCard';
 import Button from '@/components/ui/Button';
 import StateMessage from '@/components/ui/StateMessage';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { useDesa } from '@/context/DesaContext';
 
 export default function PengaduanPage() {
+  const { namaDesaPendek } = useDesa();
   const [formData, setFormData] = useState({
     nama_pelapor: '',
     nik_pelapor: '',
@@ -76,7 +78,7 @@ export default function PengaduanPage() {
     <main className="min-h-screen bg-white pb-20">
       <PageHeader 
         title={<>Laporkan Masalah <br/> <span className="text-emerald-700">Di Sekitar Anda</span></>}
-        description="Bantu kami membangun Desa Cibatu yang lebih baik dengan melaporkan masalah infrastruktur, sosial, atau pelayanan."
+        description={`Bantu kami membangun Desa ${namaDesaPendek} yang lebih baik dengan melaporkan masalah infrastruktur, sosial, atau pelayanan.`}
         breadcrumbs={[
           { label: 'Layanan' },
           { label: 'Pengaduan Warga', href: '/layanan/pengaduan' }
@@ -152,7 +154,10 @@ export default function PengaduanPage() {
 
                     {/* Category Selection */}
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Kategori Laporan</label>
+                      <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tindak Lanjut Cepat</h4>
+                      <p className="text-sm font-medium text-slate-700 leading-relaxed">
+                        Setiap laporan yang masuk akan diverifikasi dan diteruskan ke instansi terkait di Desa {namaDesaPendek} dalam waktu 1x24 jam kerja.
+                      </p>
                       <div className="flex flex-wrap gap-3">
                         {categories.map((cat) => (
                           <button

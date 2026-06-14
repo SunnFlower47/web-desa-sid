@@ -12,8 +12,10 @@ import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import GlassCard from '@/components/ui/GlassCard';
+import { useDesa } from '@/context/DesaContext';
 
 export default function StatistikPage() {
+  const { namaDesaPendek } = useDesa();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,8 +56,8 @@ export default function StatistikPage() {
   return (
     <main className="min-h-screen bg-white pb-20">
       <PageHeader 
-        title={<>Cibatu <br/> <span className="text-emerald-700">Dalam Angka</span></>}
-        description="Transparansi data kependudukan Desa Cibatu yang diperbarui secara berkala untuk perencanaan pembangunan yang lebih baik."
+        title={<>{namaDesaPendek} <br/> <span className="text-emerald-700">Dalam Angka</span></>}
+        description={`Transparansi data kependudukan Desa ${namaDesaPendek} yang diperbarui secara berkala untuk perencanaan pembangunan yang lebih baik.`}
         breadcrumbs={[
           { label: 'Informasi' },
           { label: 'Statistik', href: '/info/statistik' }
@@ -147,7 +149,7 @@ export default function StatistikPage() {
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
           <div className="relative z-10">
             <h3 className="text-2xl font-black mb-2">Struktur Demografi</h3>
-            <p className="text-emerald-100 font-medium">Mayoritas penduduk Desa Cibatu berada pada usia produktif.</p>
+            <p className="text-emerald-100 font-medium">Mayoritas penduduk Desa {namaDesaPendek} berada pada usia produktif.</p>
           </div>
           <div className="flex gap-12 relative z-10">
             <div className="text-center">

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useDesa } from '@/context/DesaContext';
 
 // Fix for default Leaflet markers in Next.js
 import L from 'leaflet';
@@ -26,6 +27,7 @@ function FitBounds({ geoData }) {
 }
 
 export default function VillageMap({ fasilitas = [] }) {
+  const { namaDesa } = useDesa();
   const [geoData, setGeoData] = useState(null);
 
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function VillageMap({ fasilitas = [] }) {
     if (feature.properties) {
       const popupContent = `
         <div class="text-center font-outfit">
-          <h3 class="font-bold text-slate-800 border-b pb-1 mb-2">Desa Cibatu</h3>
+          <h3 class="font-bold text-slate-800 border-b pb-1 mb-2">${namaDesa}</h3>
           <p class="text-sm text-slate-600">Wilayah Administratif</p>
         </div>
       `;

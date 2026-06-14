@@ -21,7 +21,7 @@ async function handleRequest(method, request, paramsPromise) {
   // Ambil Config dari .env
   let baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
   baseUrl = baseUrl.replace(/\/$/, "");
-  const proxyKey = process.env.PROXY_KEY || process.env.NEXT_PUBLIC_PROXY_KEY; // NEXT_PUBLIC fallback sementara
+  const proxyKey = process.env.PROXY_KEY || process.env.NEXT_PROXY_KEY;
 
   // --- SECURITY LAYER: Mencegah Akses Langsung ---
   const fetchSite = request.headers.get('sec-fetch-site');

@@ -11,9 +11,12 @@ import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import GlassCard from '@/components/ui/GlassCard';
+import StateMessage from '@/components/ui/StateMessage';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { useDesa } from '@/context/DesaContext';
 
 export default function TestimoniPage() {
+  const { namaDesa, namaDesaPendek } = useDesa();
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -134,8 +137,8 @@ export default function TestimoniPage() {
   return (
     <main className="min-h-screen bg-white pb-20">
       <PageHeader 
-        title={<>Suara <span className="text-emerald-700">Masyarakat</span></>}
-        description="Daftar testimoni dan tanggapan langsung dari warga mengenai pelayanan publik digital Desa Cibatu."
+        title={<>Suara <span className="text-emerald-700">Warga</span></>}
+        description={`Daftar testimoni dan tanggapan langsung dari warga mengenai pelayanan publik digital Desa ${namaDesaPendek}.`}
         breadcrumbs={[
           { label: 'Informasi' },
           { label: 'Testimoni Warga', href: '/testimoni' }
@@ -275,7 +278,7 @@ export default function TestimoniPage() {
                 ✕
               </button>
               <h3 className="text-2xl font-black tracking-tight mb-2">Kirim <span className="text-emerald-600">Testimoni</span></h3>
-              <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan Desa Digital Cibatu.</p>
+              <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan {namaDesa} Digital.</p>
               
               <form onSubmit={handleTestiSubmit} className="space-y-4">
                 <div className="flex items-center gap-2 px-1 mb-2">

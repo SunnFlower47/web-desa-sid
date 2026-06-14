@@ -12,8 +12,10 @@ import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { useDesa } from '@/context/DesaContext';
 
 export default function KontakPage() {
+  const { desa, namaDesaPendek, kabupaten } = useDesa();
   const [contacts, setContacts] = useState([]);
   const [formData, setFormData] = useState({
     nama: '',
@@ -72,7 +74,7 @@ export default function KontakPage() {
     <main className="min-h-screen bg-white pb-20">
       <PageHeader 
         title={<>Hubungi <br/> <span className="text-emerald-700">Kami</span></>}
-        description="Kami siap melayani dan menjawab setiap pertanyaan Anda mengenai layanan Desa Cibatu."
+        description={`Kami siap melayani dan menjawab setiap pertanyaan Anda mengenai layanan Desa ${namaDesaPendek}.`}
         breadcrumbs={[
           { label: 'Layanan' },
           { label: 'Kontak & Bantuan', href: '/layanan/kontak' }
@@ -90,7 +92,7 @@ export default function KontakPage() {
                 </div>
                 <div>
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Alamat Kantor</h4>
-                  <p className="font-bold text-slate-800">Jl. Raya Cibatu No. 01, Kec. Cibatu, Purwakarta</p>
+                  <p className="font-bold text-slate-800">Kantor Kepala Desa {namaDesaPendek}, Kab. {kabupaten}</p>
                 </div>
               </div>
 
@@ -100,7 +102,7 @@ export default function KontakPage() {
                 </div>
                 <div>
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Jam Kerja</h4>
-                  <p className="font-bold text-slate-800">Senin - Jumat | 08:00 - 16:00 WIB</p>
+                  <p className="font-bold text-slate-800">{desa?.jam_operasional || 'Senin - Jumat | 08:00 - 16:00 WIB'}</p>
                 </div>
               </div>
             </div>

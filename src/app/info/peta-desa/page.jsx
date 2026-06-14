@@ -9,8 +9,10 @@ import Button from '@/components/ui/Button';
 import MapViewer from '@/components/peta';
 import CardItem from '@/components/potensi/CardItem';
 import { getUmkm, getFasilitasDesa, getVillageGeoJson } from '@/lib/api';
+import { useDesa } from '@/context/DesaContext';
 
 export default function PetaDesaPage() {
+  const { namaDesaPendek } = useDesa();
   const [activeFilter, setActiveFilter] = useState('all'); // all, umkm, fasilitas
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,7 +83,7 @@ export default function PetaDesaPage() {
     <main className="min-h-screen bg-slate-50/50 pb-20">
       <PageHeader 
         title={<>Peta & <span className="text-emerald-700">Potensi Desa</span></>}
-        description="Jelajahi berbagai Usaha Mikro, Kecil, dan Menengah (UMKM) serta Fasilitas Desa Cibatu melalui peta interaktif."
+        description={`Jelajahi berbagai Usaha Mikro, Kecil, dan Menengah (UMKM) serta Fasilitas Desa ${namaDesaPendek} melalui peta interaktif.`}
         breadcrumbs={[
           { label: 'Informasi Desa', href: '#' },
           { label: 'Peta & Potensi' }

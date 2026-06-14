@@ -8,8 +8,10 @@ import {
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import GlassCard from '@/components/ui/GlassCard';
+import { useDesa } from '@/context/DesaContext';
 
 export default function TransparansiPage() {
+  const { namaDesaPendek } = useDesa();
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ export default function TransparansiPage() {
     <main className="min-h-screen bg-slate-50 pb-20">
       <PageHeader 
         title={<>Transparansi <span className="text-emerald-700">Publik</span></>}
-        description="Informasi keuangan, realisasi program pembangunan, dan penyaluran bantuan sosial Desa Cibatu yang terbuka, transparan, dan akuntabel."
+        description={`Informasi keuangan, realisasi program pembangunan, dan penyaluran bantuan sosial Desa ${namaDesaPendek} yang terbuka, transparan, dan akuntabel.`}
         breadcrumbs={[
           { label: 'Informasi' },
           { label: 'Transparansi' }

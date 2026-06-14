@@ -10,12 +10,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useDesa } from '@/context/DesaContext';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const pathname = usePathname();
+  const { namaDesaPendek, logoDesa } = useDesa();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,14 +93,14 @@ export default function Navbar() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white group-hover:rotate-[15deg] transition-all duration-500 shadow-xl glow-primary">
-                <Landmark size={24} />
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center group-hover:rotate-[15deg] transition-all duration-500 shadow-xl overflow-hidden bg-white p-1">
+                <img src={logoDesa} alt={`Logo ${namaDesaPendek}`} className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className={`font-black text-xl leading-none tracking-tighter transition-colors ${
                   isScrolled ? 'text-slate-900' : 'text-white'
                 }`}>
-                  Desa<span className="text-emerald-500">Cibatu</span>
+                  Desa<span className="text-emerald-500">{namaDesaPendek}</span>
                 </span>
                 <span className={`text-[9px] font-black uppercase tracking-[0.4em] transition-colors ${
                   isScrolled ? 'text-emerald-600' : 'text-emerald-400'
