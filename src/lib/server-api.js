@@ -8,14 +8,16 @@ export function getTenantFromHost(host) {
   const hostname = host.split(':')[0];
   
   // Daftar central domain
-  const centralDomains = [
-    'sistem-desa-cibatu.test',
-    'diskominfo.sistem-desa-cibatu.test',
-    'admin.sistem-desa-cibatu.test',
-    'purwakarta.desa.id',
-    'diskominfo.purwakarta.desa.id',
-    'admin.purwakarta.desa.id'
-  ];
+  const centralDomains = process.env.NEXT_PUBLIC_CENTRAL_DOMAINS
+    ? process.env.NEXT_PUBLIC_CENTRAL_DOMAINS.split(',').map(d => d.trim())
+    : [
+        'sistem-desa-cibatu.test',
+        'diskominfo.sistem-desa-cibatu.test',
+        'admin.sistem-desa-cibatu.test',
+        'purwakarta.desa.id',
+        'diskominfo.purwakarta.desa.id',
+        'admin.purwakarta.desa.id'
+      ];
   
   if (centralDomains.includes(hostname)) {
     return null;
