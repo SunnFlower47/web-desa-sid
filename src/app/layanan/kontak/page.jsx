@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Phone, Mail, MapPin, Send, MessageSquare, 
-  Clock, ArrowLeft, Loader2, CheckCircle2, 
+import {
+  Phone, Mail, MapPin, Send, MessageSquare,
+  Clock, ArrowLeft, Loader2, CheckCircle2,
   Smartphone, Users, Globe
 } from 'lucide-react';
 import api from '@/lib/api';
@@ -72,8 +72,8 @@ export default function KontakPage() {
 
   return (
     <main className="min-h-screen bg-white pb-20">
-      <PageHeader 
-        title={<>Hubungi <br/> <span className="text-emerald-700">Kami</span></>}
+      <PageHeader
+        title={<>Hubungi <br /> <span className="text-emerald-700">Kami</span></>}
         description={`Kami siap melayani dan menjawab setiap pertanyaan Anda mengenai layanan Desa ${namaDesaPendek}.`}
         breadcrumbs={[
           { label: 'Layanan' },
@@ -137,28 +137,28 @@ export default function KontakPage() {
           {/* Right Column: Contact Form */}
           <div className="bg-slate-900 rounded-[3.5rem] p-8 md:p-14 text-white relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-emerald-500/5 blur-[100px] pointer-events-none" />
-            
+
             <h2 className="text-3xl font-black mb-8 tracking-tight">Kirim Pesan</h2>
-            
+
             {!success ? (
               <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                      <input 
+                      <input
                         required type="text"
                         value={formData.nama}
-                        onChange={(e) => setFormData({...formData, nama: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                         className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:bg-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1">Email</label>
-                      <input 
+                      <input
                         required type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:bg-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold"
                       />
                     </div>
@@ -166,48 +166,48 @@ export default function KontakPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1">Nomor Telepon / WA</label>
-                      <input 
+                      <input
                         required type="tel"
                         value={formData.telepon}
-                        onChange={(e) => setFormData({...formData, telepon: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
                         placeholder="Contoh: 0812..."
                         className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:bg-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1">Subjek</label>
-                      <input 
+                      <input
                         required type="text"
                         value={formData.subjek}
-                        onChange={(e) => setFormData({...formData, subjek: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, subjek: e.target.value })}
                         className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:bg-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1">Pesan</label>
-                    <textarea 
+                    <textarea
                       required rows={5}
                       value={formData.pesan}
-                      onChange={(e) => setFormData({...formData, pesan: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, pesan: e.target.value })}
                       className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:bg-white/10 focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold resize-none"
                     />
                   </div>
                 </div>
 
-                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1 mb-2 block">Keamanan ReCAPTCHA</label>
                     <ReCAPTCHA
                       ref={recaptchaRef}
-                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                      sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
                       onChange={setRecaptchaToken}
                       theme="dark"
                     />
                   </div>
                 )}
 
-                <Button 
+                <Button
                   type="submit"
                   disabled={submitting}
                   isLoading={submitting}
@@ -220,7 +220,7 @@ export default function KontakPage() {
                 </Button>
               </form>
             ) : (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-20"
               >
@@ -231,7 +231,7 @@ export default function KontakPage() {
                 <p className="text-slate-400 font-medium mb-10 text-sm">
                   Terima kasih, pesan Anda sudah kami terima. Kami akan segera membalas melalui email atau WhatsApp.
                 </p>
-                <Button 
+                <Button
                   onClick={() => setSuccess(false)}
                   variant="outline"
                   className="text-white border-white/20 hover:bg-white hover:text-slate-900"

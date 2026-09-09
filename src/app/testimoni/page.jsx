@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Star, MessageCircle, User, Calendar, Filter, 
-  ArrowLeft, Loader2, HeartHandshake, Sparkles, MessageSquare 
+import {
+  Star, MessageCircle, User, Calendar, Filter,
+  ArrowLeft, Loader2, HeartHandshake, Sparkles, MessageSquare
 } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
@@ -25,9 +25,9 @@ export default function TestimoniPage() {
   const [categories, setCategories] = useState([]);
 
   // Form State
-  const [testiForm, setTestiForm] = useState({ 
-    nama: '', instansi: '', isi: '', rating: 5, 
-    email: '', telepon: '', is_anonymous: false 
+  const [testiForm, setTestiForm] = useState({
+    nama: '', instansi: '', isi: '', rating: 5,
+    email: '', telepon: '', is_anonymous: false
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
@@ -40,7 +40,7 @@ export default function TestimoniPage() {
       if (res.data.success) {
         const data = res.data.data || [];
         setTestimonials(data);
-        
+
         // Extract unique categories
         const cats = Array.from(new Set(data.map((t) => t.kategori).filter(Boolean)));
         setCategories(cats);
@@ -77,7 +77,7 @@ export default function TestimoniPage() {
       const res = await api.post('/testimoni', payload, {
         headers: { 'X-Recaptcha-Token': recaptchaToken }
       });
-      
+
       if (res.data.success || res.status === 201) {
         alert('Terima kasih! Testimoni Anda berhasil dikirim dan menunggu persetujuan admin.');
         setIsModalOpen(false);
@@ -136,7 +136,7 @@ export default function TestimoniPage() {
 
   return (
     <main className="min-h-screen bg-white pb-20">
-      <PageHeader 
+      <PageHeader
         title={<>Suara <span className="text-emerald-700">Warga</span></>}
         description={`Daftar testimoni dan tanggapan langsung dari warga mengenai pelayanan publik digital Desa ${namaDesaPendek}.`}
         breadcrumbs={[
@@ -144,7 +144,7 @@ export default function TestimoniPage() {
           { label: 'Testimoni Warga', href: '/testimoni' }
         ]}
         action={
-          <Button 
+          <Button
             onClick={() => setIsModalOpen(true)}
             size="lg"
             className="shadow-xl shadow-emerald-600/20"
@@ -217,7 +217,7 @@ export default function TestimoniPage() {
         ) : filteredTestimonials.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTestimonials.map((testimonial, idx) => (
-              <motion.div 
+              <motion.div
                 key={testimonial.id || idx}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -258,20 +258,20 @@ export default function TestimoniPage() {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-[2.5rem] p-8 max-w-md w-full relative z-10 shadow-2xl border border-slate-100"
             >
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors font-bold"
               >
@@ -279,13 +279,13 @@ export default function TestimoniPage() {
               </button>
               <h3 className="text-2xl font-black tracking-tight mb-2">Kirim <span className="text-emerald-600">Testimoni</span></h3>
               <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan {namaDesa} Digital.</p>
-              
+
               <form onSubmit={handleTestiSubmit} className="space-y-4">
                 <div className="flex items-center gap-2 px-1 mb-2">
-                  <input 
-                    type="checkbox" id="anon" 
-                    checked={testiForm.is_anonymous} 
-                    onChange={e => setTestiForm({...testiForm, is_anonymous: e.target.checked})}
+                  <input
+                    type="checkbox" id="anon"
+                    checked={testiForm.is_anonymous}
+                    onChange={e => setTestiForm({ ...testiForm, is_anonymous: e.target.checked })}
                     className="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
                   />
                   <label htmlFor="anon" className="text-xs font-bold text-slate-600 cursor-pointer">
@@ -303,30 +303,30 @@ export default function TestimoniPage() {
                     >
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nama Lengkap</label>
-                        <input 
-                          required type="text" value={testiForm.nama} 
-                          onChange={e => setTestiForm({...testiForm, nama: e.target.value})} 
-                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
-                          placeholder="Misal: Budi Santoso" 
+                        <input
+                          required type="text" value={testiForm.nama}
+                          onChange={e => setTestiForm({ ...testiForm, nama: e.target.value })}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all"
+                          placeholder="Misal: Budi Santoso"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email (Opsional)</label>
-                          <input 
-                            type="email" value={testiForm.email} 
-                            onChange={e => setTestiForm({...testiForm, email: e.target.value})} 
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
-                            placeholder="budi@email.com" 
+                          <input
+                            type="email" value={testiForm.email}
+                            onChange={e => setTestiForm({ ...testiForm, email: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all"
+                            placeholder="budi@email.com"
                           />
                         </div>
                         <div>
                           <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Telepon (Opsional)</label>
-                          <input 
-                            type="text" value={testiForm.telepon} 
-                            onChange={e => setTestiForm({...testiForm, telepon: e.target.value})} 
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" 
-                            placeholder="08xxxxxxxxxx" 
+                          <input
+                            type="text" value={testiForm.telepon}
+                            onChange={e => setTestiForm({ ...testiForm, telepon: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all"
+                            placeholder="08xxxxxxxxxx"
                           />
                         </div>
                       </div>
@@ -335,11 +335,11 @@ export default function TestimoniPage() {
                 </AnimatePresence>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keterangan / Instansi</label>
-                  <input 
-                    required type="text" value={testiForm.instansi} 
-                    onChange={e => setTestiForm({...testiForm, instansi: e.target.value})} 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" 
-                    placeholder="Misal: Warga RT 02 / Tokoh Masyarakat" 
+                  <input
+                    required type="text" value={testiForm.instansi}
+                    onChange={e => setTestiForm({ ...testiForm, instansi: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all"
+                    placeholder="Misal: Warga RT 02 / Tokoh Masyarakat"
                   />
                 </div>
 
@@ -350,7 +350,7 @@ export default function TestimoniPage() {
                       <button
                         key={star}
                         type="button"
-                        onClick={() => setTestiForm({...testiForm, rating: star})}
+                        onClick={() => setTestiForm({ ...testiForm, rating: star })}
                         className={`text-2xl transition-all ${star <= testiForm.rating ? 'text-yellow-400' : 'text-slate-200'}`}
                       >
                         ★
@@ -360,25 +360,25 @@ export default function TestimoniPage() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Pesan Testimoni (Min. 10 Karakter)</label>
-                  <textarea 
-                    required minLength={10} rows={4} value={testiForm.isi} 
-                    onChange={e => setTestiForm({...testiForm, isi: e.target.value})} 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" 
-                    placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..." 
+                  <textarea
+                    required minLength={10} rows={4} value={testiForm.isi}
+                    onChange={e => setTestiForm({ ...testiForm, isi: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all"
+                    placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..."
                   />
                 </div>
 
-                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
                   <div className="space-y-1">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keamanan ReCAPTCHA</label>
                     <ReCAPTCHA
                       ref={recaptchaRef}
-                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                      sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
                       onChange={setRecaptchaToken}
                     />
                   </div>
                 )}
-                <Button 
+                <Button
                   type="submit"
                   disabled={isSubmitting}
                   isLoading={isSubmitting}

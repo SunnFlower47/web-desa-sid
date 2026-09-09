@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Megaphone, ShieldCheck, MapPin, AlertCircle, 
-  Send, Loader2, CheckCircle2, ArrowLeft, 
+import {
+  Megaphone, ShieldCheck, MapPin, AlertCircle,
+  Send, Loader2, CheckCircle2, ArrowLeft,
   Camera, Info, Clock, ChevronRight
 } from 'lucide-react';
 import api from '@/lib/api';
@@ -34,7 +34,7 @@ export default function PengaduanPage() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
-  
+
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const recaptchaRef = React.useRef(null);
 
@@ -76,8 +76,8 @@ export default function PengaduanPage() {
 
   return (
     <main className="min-h-screen bg-white pb-20">
-      <PageHeader 
-        title={<>Laporkan Masalah <br/> <span className="text-emerald-700">Di Sekitar Anda</span></>}
+      <PageHeader
+        title={<>Laporkan Masalah <br /> <span className="text-emerald-700">Di Sekitar Anda</span></>}
         description={`Bantu kami membangun Desa ${namaDesaPendek} yang lebih baik dengan melaporkan masalah infrastruktur, sosial, atau pelayanan.`}
         breadcrumbs={[
           { label: 'Layanan' },
@@ -91,7 +91,7 @@ export default function PengaduanPage() {
 
             <AnimatePresence mode="wait">
               {!success ? (
-                <motion.form 
+                <motion.form
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                   onSubmit={handleSubmit} className="space-y-8"
                 >
@@ -100,20 +100,20 @@ export default function PengaduanPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nama Lengkap</label>
-                        <input 
-                          required type="text" 
+                        <input
+                          required type="text"
                           value={formData.nama_pelapor}
-                          onChange={(e) => setFormData({...formData, nama_pelapor: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, nama_pelapor: e.target.value })}
                           placeholder="Sesuai KTP"
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">NIK (Opsional)</label>
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           value={formData.nik_pelapor}
-                          onChange={(e) => setFormData({...formData, nik_pelapor: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, nik_pelapor: e.target.value })}
                           placeholder="16 Digit NIK"
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                         />
@@ -121,20 +121,20 @@ export default function PengaduanPage() {
                     </div>                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
-                        <input 
-                          required type="email" 
+                        <input
+                          required type="email"
                           value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           placeholder="Email aktif untuk balasan"
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">No. WhatsApp / Telepon</label>
-                        <input 
-                          required type="text" 
+                        <input
+                          required type="text"
                           value={formData.telepon}
-                          onChange={(e) => setFormData({...formData, telepon: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
                           placeholder="08xxxxxxxxxx"
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                         />
@@ -143,10 +143,10 @@ export default function PengaduanPage() {
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Alamat Domisili Pelapor</label>
-                      <textarea 
+                      <textarea
                         required rows={2}
                         value={formData.alamat}
-                        onChange={(e) => setFormData({...formData, alamat: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, alamat: e.target.value })}
                         placeholder="Alamat lengkap tempat tinggal Anda saat ini"
                         className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900 resize-none"
                       />
@@ -162,12 +162,11 @@ export default function PengaduanPage() {
                         {categories.map((cat) => (
                           <button
                             key={cat.id} type="button"
-                            onClick={() => setFormData({...formData, kategori: cat.id})}
-                            className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border flex items-center gap-2 ${
-                              formData.kategori === cat.id 
-                              ? 'bg-emerald-700 text-white border-emerald-700 shadow-lg shadow-emerald-200' 
-                              : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
-                            }`}
+                            onClick={() => setFormData({ ...formData, kategori: cat.id })}
+                            className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border flex items-center gap-2 ${formData.kategori === cat.id
+                                ? 'bg-emerald-700 text-white border-emerald-700 shadow-lg shadow-emerald-200'
+                                : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
+                              }`}
                           >
                             <span>{cat.icon}</span> {cat.label}
                           </button>
@@ -179,20 +178,20 @@ export default function PengaduanPage() {
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Judul Laporan</label>
-                        <input 
-                          required type="text" 
+                        <input
+                          required type="text"
                           value={formData.judul}
-                          onChange={(e) => setFormData({...formData, judul: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, judul: e.target.value })}
                           placeholder="Contoh: Jalan Rusak di Dusun III"
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Deskripsi Lengkap</label>
-                        <textarea 
+                        <textarea
                           required rows={5}
                           value={formData.deskripsi}
-                          onChange={(e) => setFormData({...formData, deskripsi: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
                           placeholder="Ceritakan detail masalah yang terjadi..."
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900 resize-none"
                         />
@@ -205,10 +204,10 @@ export default function PengaduanPage() {
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Lokasi Kejadian</label>
                         <div className="relative">
                           <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                          <input 
-                            required type="text" 
+                          <input
+                            required type="text"
                             value={formData.lokasi}
-                            onChange={(e) => setFormData({...formData, lokasi: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, lokasi: e.target.value })}
                             placeholder="Alamat atau Titik Kenal"
                             className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900"
                           />
@@ -216,9 +215,9 @@ export default function PengaduanPage() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Tingkat Prioritas</label>
-                        <select 
+                        <select
                           value={formData.prioritas}
-                          onChange={(e) => setFormData({...formData, prioritas: e.target.value})}
+                          onChange={(e) => setFormData({ ...formData, prioritas: e.target.value })}
                           className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 outline-none transition-all font-bold text-slate-900 appearance-none"
                         >
                           <option value="rendah">Biasa (Rendah)</option>
@@ -230,12 +229,12 @@ export default function PengaduanPage() {
                     </div>
                   </GlassCard>
 
-                  {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                  {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-2 block">Keamanan ReCAPTCHA</label>
                       <ReCAPTCHA
                         ref={recaptchaRef}
-                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                        sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
                         onChange={setRecaptchaToken}
                       />
                     </div>
@@ -247,7 +246,7 @@ export default function PengaduanPage() {
                     </div>
                   )}
 
-                  <Button 
+                  <Button
                     type="submit"
                     disabled={submitting}
                     isLoading={submitting}
@@ -261,7 +260,7 @@ export default function PengaduanPage() {
                 </motion.form>
               ) : (
                 <div className="py-10">
-                  <StateMessage 
+                  <StateMessage
                     type="success"
                     title="Laporan Berhasil Terkirim!"
                     message="Terima kasih telah peduli. Laporan Anda telah masuk ke sistem dan akan segera diproses oleh petugas desa."
@@ -269,7 +268,7 @@ export default function PengaduanPage() {
                     onAction={() => {
                       setSuccess(false);
                       setFormData({
-                        nama_pelapor: '', nik_pelapor: '', telepon: '', email: '', alamat: '', 
+                        nama_pelapor: '', nik_pelapor: '', telepon: '', email: '', alamat: '',
                         kategori: 'infrastruktur', judul: '', deskripsi: '', lokasi: '', prioritas: 'sedang'
                       });
                     }}

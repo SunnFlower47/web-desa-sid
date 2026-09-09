@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import { getTenantFromHost } from '@/lib/server-api';
+
 
 export async function GET(request, { params }) {
   return handleRequest('GET', request, params);
@@ -21,7 +23,7 @@ async function handleRequest(method, request, paramsPromise) {
   // Ambil Config dari .env
   let baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
   baseUrl = baseUrl.replace(/\/$/, "");
-  const proxyKey = process.env.PROXY_KEY || process.env.NEXT_PROXY_KEY;
+  const proxyKey = process.env.PROXY_KEY || process.env.NEXT_PROXY_KEY || process.env.NEXT_PUBLIC_PROXY_KEY;
 
   // --- SECURITY LAYER: Mencegah Akses Langsung ---
   const fetchSite = request.headers.get('sec-fetch-site');
@@ -41,6 +43,10 @@ async function handleRequest(method, request, paramsPromise) {
   // Tembak ke Proxy Controller Laravel
   const backendUrl = `${baseUrl}/api/proxy/v1/${path}${queryString ? `?${queryString}` : ''}`;
 
+  // Deteksi tenant dari Host header request client
+  const clientHost = request.headers.get('host') || '';
+  const tenantId = getTenantFromHost(clientHost) || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'cibatu';
+
   try {
     let body = undefined;
     const headers = {
@@ -48,6 +54,7 @@ async function handleRequest(method, request, paramsPromise) {
       'X-Proxy-App-Id': proxyKey,
       'X-Origin': 'cibatu-vibe-ai',
       'User-Agent': request.headers.get('user-agent') || 'Cibatu-Next-Proxy/1.0',
+      'X-Tenant': tenantId,
     };
 
     // Forward token keamanan penting jika ada

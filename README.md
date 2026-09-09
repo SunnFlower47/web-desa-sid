@@ -61,8 +61,8 @@ NEXT_PROXY_KEY=
 NEXT_PUBLIC_SITE_URL=https://cibatu-vibe-ai-505268805663.asia-southeast2.run.app
 
 # Keamanan Google reCAPTCHA
-NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY=your_recaptcha_v2_site_key
-NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY=your_recaptcha_v3_site_key
+NEXT_RECAPTCHA_V2_SITE_KEY=your_recaptcha_v2_site_key
+NEXT_RECAPTCHA_V3_SITE_KEY=your_recaptcha_v3_site_key
 ```
 
 > **Catatan Penting**: Khusus saat mendeploy ke layanan berbasis *container* (seperti Google Cloud Run), Next.js Standalone tidak akan otomatis memuat file `.env`. Gunakan file `.gcloudignore` untuk memasukkan file `.env` dalam proses *build*, atau _inject_ variabel lingkungan menggunakan pengaturan *Environment Variables* di Google Cloud Console.
