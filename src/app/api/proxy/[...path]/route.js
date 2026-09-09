@@ -58,13 +58,22 @@ async function handleRequest(method, request, paramsPromise) {
     };
 
     // Forward token keamanan penting jika ada
-    const recaptchaV3 = request.headers.get('X-Recaptcha-V3-Token');
-    const recaptcha = request.headers.get('X-Recaptcha-Token');
-    const csrf = request.headers.get('X-CSRF-Token');
+    const recaptchaV3 = request.headers.get('X-Recaptcha-V3-Token') || request.headers.get('x-recaptcha-v3-token');
+    const recaptcha = request.headers.get('X-Recaptcha-Token') || request.headers.get('x-recaptcha-token');
+    const csrf = request.headers.get('X-CSRF-Token') || request.headers.get('x-csrf-token');
 
-    if (recaptchaV3) headers['X-Recaptcha-V3-Token'] = recaptchaV3;
-    if (recaptcha) headers['X-Recaptcha-Token'] = recaptcha;
-    if (csrf) headers['X-CSRF-Token'] = csrf;
+    if (recaptchaV3) {
+      headers['X-Recaptcha-V3-Token'] = recaptchaV3;
+      headers['x-recaptcha-v3-token'] = recaptchaV3;
+    }
+    if (recaptcha) {
+      headers['X-Recaptcha-Token'] = recaptcha;
+      headers['x-recaptcha-token'] = recaptcha;
+    }
+    if (csrf) {
+      headers['X-CSRF-Token'] = csrf;
+      headers['x-csrf-token'] = csrf;
+    }
 
     if (method === 'POST') {
       try {

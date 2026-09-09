@@ -17,15 +17,38 @@ const api = axios.create({
 // Interceptor untuk menangani reCAPTCHA v3 secara otomatis pada request mutating (POST, PUT, DELETE)
 api.interceptors.request.use(async (config) => {
   const v3SiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY;
-  if (config.method !== 'get' && v3SiteKey && typeof window !== 'undefined' && window.grecaptcha) {
+  if (config.method !== 'get' && v3SiteKey && typeof window !== 'undefined') {
     try {
-      const token = await new Promise((resolve) => {
-        window.grecaptcha.ready(() => {
-          window.grecaptcha.execute(v3SiteKey, { action: 'api_request' }).then(resolve);
+      // Tunggu hingga window.grecaptcha siap (maksimal 2.5 detik)
+      for (let i = 0; i < 25; i++) {
+        if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 100));
+      }
+
+      if (window.grecaptcha && typeof window.grecaptcha.ready === 'function') {
+        const token = await new Promise((resolve) => {
+          window.grecaptcha.ready(() => {
+            window.grecaptcha.execute(v3SiteKey, { action: 'api_request' })
+              .then(resolve)
+              .catch((err) => {
+                console.warn('[reCAPTCHA v3] Execute error:', err);
+                resolve(null);
+              });
+          });
         });
-      });
-      if (token) {
-        config.headers['X-Recaptcha-V3-Token'] = token;
+
+        if (token) {
+          config.headers['X-Recaptcha-V3-Token'] = token;
+          config.headers['x-recaptcha-v3-token'] = token;
+          // Sertakan juga di body jika data berupa object
+          if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
+            config.data.recaptcha_token = token;
+          }
+        }
+      } else {
+        console.warn('[reCAPTCHA v3] grecaptcha script not ready on window.');
       }
     } catch (e) {
       console.warn('reCAPTCHA v3 generation failed', e);

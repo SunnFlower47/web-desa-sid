@@ -145,13 +145,13 @@ export default async function RootLayout({ children }) {
           <Footer />
           <ChatAssistant />
           <CacheClearButton />
-          {v3SiteKey && (
-            <Script
-              src={`https://www.google.com/recaptcha/api.js?render=${v3SiteKey}`}
-              strategy="beforeInteractive"
-            />
-          )}
         </DesaProvider>
+        {v3SiteKey && (
+          <Script
+            src={`https://www.google.com/recaptcha/api.js?render=${v3SiteKey}`}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );
