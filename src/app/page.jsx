@@ -54,7 +54,7 @@ export default function Home() {
 
   const handleTestiSubmit = async (e) => {
     e.preventDefault();
-    if (!recaptchaToken && process.env.NEXT_RECAPTCHA_V2_SITE_KEY) {
+    if (!recaptchaToken && process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY) {
       alert("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
       return;
     }
@@ -559,12 +559,12 @@ export default function Home() {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Pesan Testimoni (Min. 10 Karakter)</label>
                   <textarea required minLength={10} rows={4} value={testiForm.isi} onChange={e => setTestiForm({ ...testiForm, isi: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..." />
                 </div>
-                {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
+                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
                   <div className="space-y-1">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keamanan ReCAPTCHA</label>
                     <ReCAPTCHA
                       ref={recaptchaRef}
-                      sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
                       onChange={setRecaptchaToken}
                     />
                   </div>

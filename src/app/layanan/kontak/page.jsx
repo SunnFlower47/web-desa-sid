@@ -195,12 +195,12 @@ export default function KontakPage() {
                   </div>
                 </div>
 
-                {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
+                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
                   <div className="space-y-1">
                     <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest ml-1 mb-2 block">Keamanan ReCAPTCHA</label>
                     <ReCAPTCHA
                       ref={recaptchaRef}
-                      sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
                       onChange={setRecaptchaToken}
                       theme="dark"
                     />

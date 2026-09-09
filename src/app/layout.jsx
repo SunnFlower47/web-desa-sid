@@ -47,7 +47,7 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const v3SiteKey = process.env.NEXT_RECAPTCHA_V3_SITE_KEY;
+  const v3SiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY;
   const initialDesaData = await getDesaSettings();
 
   if (initialDesaData?.is_inactive) {
@@ -145,13 +145,13 @@ export default async function RootLayout({ children }) {
           <Footer />
           <ChatAssistant />
           <CacheClearButton />
-          {v3SiteKey && (
-            <Script
-              src={`https://www.google.com/recaptcha/api.js?render=${v3SiteKey}`}
-              strategy="beforeInteractive"
-            />
-          )}
         </DesaProvider>
+        {v3SiteKey && (
+          <Script
+            src={`https://www.google.com/recaptcha/api.js?render=${v3SiteKey}`}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   );

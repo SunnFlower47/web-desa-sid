@@ -298,8 +298,8 @@ export default function LayananSurat() {
           ].map((s) => (
             <div key={s.id} className="relative z-10 flex flex-col items-center">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${step >= s.id
-                  ? "bg-emerald-700 text-white shadow-lg shadow-emerald-200 scale-110"
-                  : "bg-white text-slate-400 border border-slate-100 shadow-sm"
+                ? "bg-emerald-700 text-white shadow-lg shadow-emerald-200 scale-110"
+                : "bg-white text-slate-400 border border-slate-100 shadow-sm"
                 }`}>
                 {s.icon}
               </div>
@@ -671,12 +671,12 @@ export default function LayananSurat() {
                           ></textarea>
                         </div>
 
-                        {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
+                        {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
                           <div className="space-y-3 flex flex-col items-start justify-center">
                             <label className="text-sm font-bold text-slate-700 ml-1">Keamanan ReCAPTCHA</label>
                             <ReCAPTCHA
                               ref={recaptchaRef}
-                              sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
+                              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
                               onChange={setRecaptchaToken}
                             />
                           </div>
