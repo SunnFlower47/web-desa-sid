@@ -164,8 +164,8 @@ export default function PengaduanPage() {
                             key={cat.id} type="button"
                             onClick={() => setFormData({ ...formData, kategori: cat.id })}
                             className={`px-6 py-3 rounded-2xl text-xs font-bold transition-all border flex items-center gap-2 ${formData.kategori === cat.id
-                                ? 'bg-emerald-700 text-white border-emerald-700 shadow-lg shadow-emerald-200'
-                                : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
+                              ? 'bg-emerald-700 text-white border-emerald-700 shadow-lg shadow-emerald-200'
+                              : 'bg-white text-slate-500 border-slate-200 hover:border-emerald-300'
                               }`}
                           >
                             <span>{cat.icon}</span> {cat.label}
@@ -229,12 +229,12 @@ export default function PengaduanPage() {
                     </div>
                   </GlassCard>
 
-                  {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
+                  {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-2 block">Keamanan ReCAPTCHA</label>
                       <ReCAPTCHA
                         ref={recaptchaRef}
-                        sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
+                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
                         onChange={setRecaptchaToken}
                       />
                     </div>

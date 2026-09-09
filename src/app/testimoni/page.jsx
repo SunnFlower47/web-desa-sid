@@ -368,12 +368,12 @@ export default function TestimoniPage() {
                   />
                 </div>
 
-                {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
+                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
                   <div className="space-y-1">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keamanan ReCAPTCHA</label>
                     <ReCAPTCHA
                       ref={recaptchaRef}
-                      sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
                       onChange={setRecaptchaToken}
                     />
                   </div>

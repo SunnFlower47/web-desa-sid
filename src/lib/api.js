@@ -16,7 +16,7 @@ const api = axios.create({
 
 // Interceptor untuk menangani reCAPTCHA v3 secara otomatis pada request mutating (POST, PUT, DELETE)
 api.interceptors.request.use(async (config) => {
-  const v3SiteKey = process.env.NEXT_RECAPTCHA_V3_SITE_KEY;
+  const v3SiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_V3_SITE_KEY;
   if (config.method !== 'get' && v3SiteKey && typeof window !== 'undefined' && window.grecaptcha) {
     try {
       const token = await new Promise((resolve) => {
