@@ -102,4 +102,4 @@ Proyek ini dioptimalkan untuk Cloud Run dengan fitur Next.js *Standalone Build*.
 *   Integrasi keamanan `reCAPTCHA v2` dan `v3`.
 *   Akses API via Server Proxy Next.js untuk proteksi tautan Backend.
 *   Optimalisasi SEO dan caching *Server-Side*.
-
+r
