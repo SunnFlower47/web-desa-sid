@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { 
-  Bot, FileText, Newspaper, ArrowRight, MessageSquare, 
-  ShieldCheck, MapPin, Phone, Users, Landmark, 
+import {
+  Bot, FileText, Newspaper, ArrowRight, MessageSquare,
+  ShieldCheck, MapPin, Phone, Users, Landmark,
   HeartHandshake, Megaphone, Search, CheckCircle2,
   Sparkles, Zap, Shield, Globe, MousePointer2, Activity,
   BarChart3
@@ -54,11 +54,11 @@ export default function Home() {
 
   const handleTestiSubmit = async (e) => {
     e.preventDefault();
-    if (!recaptchaToken && process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY) {
+    if (!recaptchaToken && process.env.NEXT_RECAPTCHA_V2_SITE_KEY) {
       alert("Mohon selesaikan verifikasi reCAPTCHA terlebih dahulu.");
       return;
     }
-    
+
     setIsSubmittingTesti(true);
     try {
       const payload = {
@@ -69,7 +69,7 @@ export default function Home() {
       };
       const config = recaptchaToken ? { headers: { 'X-Recaptcha-Token': recaptchaToken } } : {};
       const res = await api.post('/testimoni', payload, config);
-      
+
       if (res.data.success || res.status === 201) {
         alert('Terima kasih! Testimoni Anda berhasil dikirim dan menunggu persetujuan admin.');
         setIsTestiModalOpen(false);
@@ -97,7 +97,7 @@ export default function Home() {
     }
   };
   const { scrollY } = useScroll();
-  
+
   // Toned down parallax
   const yBg = useTransform(scrollY, [0, 500], [0, 100]);
   const yContent = useTransform(scrollY, [0, 500], [0, -50]);
@@ -123,7 +123,7 @@ export default function Home() {
           api.get('/testimoni?limit=3').catch(() => null),
           api.get('/berita-latest?limit=3').catch(() => null)
         ]);
-        
+
         if (statsRes?.data?.success && statsRes.data.data) {
           setStats({
             total_penduduk: statsRes.data.data.total_penduduk?.toLocaleString('id-ID') || '0',
@@ -147,7 +147,7 @@ export default function Home() {
       {/* Hero Carousel Section */}
       <section className="relative h-screen min-h-[750px] flex items-center overflow-hidden bg-slate-950">
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={slides[currentSlide].id}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -158,8 +158,8 @@ export default function Home() {
             <motion.div style={{ y: yBg }} className="absolute inset-0">
               <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-slate-950/20 to-transparent z-10" />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/90 z-10" />
-              <Image 
-                src={slides[currentSlide].image} 
+              <Image
+                src={slides[currentSlide].image}
                 alt="Desa Digital"
                 fill
                 priority={currentSlide === 0}
@@ -200,7 +200,7 @@ export default function Home() {
                     {slides[currentSlide].title} <br />
                     <span className="text-gradient">{slides[currentSlide].subtitle}</span>
                   </h1>
-                  
+
                   <p className="text-emerald-400 font-black text-lg mb-4 italic">
                     {slides[currentSlide].accent}
                   </p>
@@ -212,7 +212,7 @@ export default function Home() {
               </AnimatePresence>
 
               {/* Stats Block */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
@@ -238,16 +238,16 @@ export default function Home() {
                 transition={{ delay: 0.6 }}
                 className="flex flex-wrap gap-4"
               >
-                <Button 
-                  href="/layanan/surat" 
-                  icon={<ArrowRight size={16} />} 
-                  iconPosition="right" 
-                  size="lg" 
+                <Button
+                  href="/layanan/surat"
+                  icon={<ArrowRight size={16} />}
+                  iconPosition="right"
+                  size="lg"
                   className="text-[10px] uppercase tracking-widest"
                 >
                   Layanan Online
                 </Button>
-                <Button 
+                <Button
                   variant="secondary"
                   onClick={() => {
                     const chatBtn = document.querySelector('#chat-assistant-toggle');
@@ -267,16 +267,15 @@ export default function Home() {
             <div className="lg:col-span-4 hidden lg:block">
               <div className="space-y-4">
                 {slides.map((_, idx) => (
-                  <button 
+                  <button
                     key={idx}
                     onClick={() => setCurrentSlide(idx)}
-                    className={`h-1 transition-all duration-500 rounded-full ${
-                      currentSlide === idx ? 'w-20 bg-emerald-500' : 'w-8 bg-white/20 hover:bg-white/40'
-                    }`}
+                    className={`h-1 transition-all duration-500 rounded-full ${currentSlide === idx ? 'w-20 bg-emerald-500' : 'w-8 bg-white/20 hover:bg-white/40'
+                      }`}
                   />
                 ))}
               </div>
-              
+
               <div className="mt-12 space-y-6">
                 <div className="bg-slate-900/40 p-8 rounded-2xl border border-white/20 flex items-start gap-6 backdrop-blur-md shadow-2xl">
                   <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 shadow-inner border border-emerald-500/30">
@@ -287,7 +286,7 @@ export default function Home() {
                     <p className="text-emerald-300 text-[10px] font-bold leading-relaxed italic uppercase tracking-widest">Transparan & Akuntabel</p>
                   </div>
                 </div>
-                
+
                 <div className="bg-slate-900/40 p-8 rounded-2xl border border-white/20 flex items-start gap-6 backdrop-blur-md shadow-2xl translate-x-8 ring-1 ring-emerald-500/50">
                   <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 shadow-inner border border-emerald-500/30 animate-pulse">
                     <Bot size={32} />
@@ -303,12 +302,12 @@ export default function Home() {
         </div>
 
         {/* Scroll Indicator */}
-        <motion.div 
+        <motion.div
           style={{ opacity }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30"
         >
           <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center p-2">
-            <motion.div 
+            <motion.div
               animate={{ y: [0, 12, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
               className="w-1 h-1 bg-emerald-500 rounded-full"
@@ -321,7 +320,7 @@ export default function Home() {
       <section className="py-32 relative">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mb-20">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest mb-6"
@@ -339,7 +338,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[200px]">
             {/* Big Card - Surat */}
-            <BentoCard 
+            <BentoCard
               className="md:col-span-8 md:row-span-2"
               title="Administrasi Surat Digital"
               desc="Layanan pengajuan SKU, SKTM, Domisili, dan Keterangan lainnya. Diproses otomatis dengan validasi data penduduk real-time."
@@ -347,9 +346,9 @@ export default function Home() {
               href="/layanan/surat"
               variant="primary"
             />
-            
+
             {/* Medium Card - Berita */}
-            <BentoCard 
+            <BentoCard
               className="md:col-span-4 md:row-span-1"
               title="Warta & Kabar Desa"
               desc={`Update terkini kegiatan dan pengumuman resmi Desa ${namaDesaPendek}.`}
@@ -359,7 +358,7 @@ export default function Home() {
             />
 
             {/* Small Card - Statistik */}
-            <BentoCard 
+            <BentoCard
               className="md:col-span-4 md:row-span-2"
               title="Statistik Desa"
               desc="Data kependudukan terintegrasi."
@@ -369,7 +368,7 @@ export default function Home() {
             />
 
             {/* Big Card - Pengaduan */}
-            <BentoCard 
+            <BentoCard
               className="md:col-span-4 md:row-span-2"
               title="Aspirasi & Pengaduan"
               desc={`Suarakan aspirasi Anda untuk kemajuan Desa ${namaDesaPendek}.`}
@@ -379,7 +378,7 @@ export default function Home() {
             />
 
             {/* Small Card - Kontak */}
-            <BentoCard 
+            <BentoCard
               className="md:col-span-4 md:row-span-1"
               title="Pusat Bantuan"
               desc="Hubungi petugas kami."
@@ -395,7 +394,7 @@ export default function Home() {
       <section className="py-24 relative bg-slate-50">
         <div className="container mx-auto px-6 max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            
+
             {/* Berita Terbaru */}
             <div>
               <div className="mb-10">
@@ -410,11 +409,11 @@ export default function Home() {
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-emerald-500/20 transition-all overflow-hidden flex flex-col h-full">
                       <div className="w-full h-40 bg-slate-100 overflow-hidden relative flex-shrink-0">
                         {item.gambar ? (
-                          <Image 
-                            src={getImageUrl(item.gambar)} 
-                            alt={item.judul} 
+                          <Image
+                            src={getImageUrl(item.gambar)}
+                            alt={item.judul}
                             fill
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
@@ -462,7 +461,7 @@ export default function Home() {
                   </div>
                   <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tighter">Suara <span className="text-emerald-600">Warga</span></h3>
                 </div>
-                <Button 
+                <Button
                   onClick={() => setIsTestiModalOpen(true)}
                   variant="outline"
                   className="bg-white"
@@ -510,20 +509,20 @@ export default function Home() {
       <AnimatePresence>
         {isTestiModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setIsTestiModalOpen(false)}
               className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-3xl p-8 max-w-md w-full relative z-10 shadow-2xl"
             >
-              <button 
+              <button
                 onClick={() => setIsTestiModalOpen(false)}
                 className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors"
               >
@@ -531,15 +530,15 @@ export default function Home() {
               </button>
               <h3 className="text-2xl font-black tracking-tight mb-2">Kirim <span className="text-emerald-600">Testimoni</span></h3>
               <p className="text-xs text-slate-500 font-medium mb-6">Bagikan pengalaman Anda menggunakan layanan {namaDesa} Digital.</p>
-              
+
               <form onSubmit={handleTestiSubmit} className="space-y-4">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nama Lengkap</label>
-                  <input required type="text" value={testiForm.nama} onChange={e => setTestiForm({...testiForm, nama: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" placeholder="Misal: Budi Santoso" />
+                  <input required type="text" value={testiForm.nama} onChange={e => setTestiForm({ ...testiForm, nama: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-800 transition-all" placeholder="Misal: Budi Santoso" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keterangan / Instansi</label>
-                  <input required type="text" value={testiForm.instansi} onChange={e => setTestiForm({...testiForm, instansi: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" placeholder="Misal: Warga RT 02 / Tokoh Masyarakat" />
+                  <input required type="text" value={testiForm.instansi} onChange={e => setTestiForm({ ...testiForm, instansi: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" placeholder="Misal: Warga RT 02 / Tokoh Masyarakat" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rating Kepuasan</label>
@@ -548,7 +547,7 @@ export default function Home() {
                       <button
                         key={star}
                         type="button"
-                        onClick={() => setTestiForm({...testiForm, rating: star})}
+                        onClick={() => setTestiForm({ ...testiForm, rating: star })}
                         className={`text-2xl transition-all ${star <= testiForm.rating ? 'text-yellow-400' : 'text-slate-200'}`}
                       >
                         ★
@@ -558,20 +557,20 @@ export default function Home() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Pesan Testimoni (Min. 10 Karakter)</label>
-                  <textarea required minLength={10} rows={4} value={testiForm.isi} onChange={e => setTestiForm({...testiForm, isi: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..." />
+                  <textarea required minLength={10} rows={4} value={testiForm.isi} onChange={e => setTestiForm({ ...testiForm, isi: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-medium text-slate-800 transition-all" placeholder="Tuliskan pengalaman Anda (minimal 10 karakter)..." />
                 </div>
-                {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+                {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
                   <div className="space-y-1">
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keamanan ReCAPTCHA</label>
                     <ReCAPTCHA
                       ref={recaptchaRef}
-                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                      sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
                       onChange={setRecaptchaToken}
                     />
                   </div>
                 )}
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   isLoading={isSubmittingTesti}
                   className="w-full"
                 >
@@ -596,28 +595,25 @@ function BentoCard({ title, desc, icon, href, className, variant = "glass" }) {
   };
 
   return (
-    <motion.div 
+    <motion.div
       whileHover={{ scale: 1.02 }}
       className={`${variants[variant]} ${className} p-8 rounded-3xl border border-slate-100 group flex flex-col justify-between relative overflow-hidden`}
     >
       <div className="absolute -top-4 -right-4 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
         {React.cloneElement(icon, { size: 140 })}
       </div>
-      
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 shadow-sm ${
-        variant === "primary" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
-      }`}>
+
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 shadow-sm ${variant === "primary" ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700"
+        }`}>
         {React.cloneElement(icon, { size: 24 })}
       </div>
 
       <div className="relative z-10">
         <h3 className="text-2xl font-black mb-3 tracking-tight leading-tight">{title}</h3>
-        <p className={`text-xs font-medium leading-relaxed mb-6 line-clamp-2 opacity-80 ${
-          variant === "primary" || variant === "dark" ? "text-slate-200" : "text-slate-500"
-        }`}>{desc}</p>
-        <Link href={href} className={`inline-flex items-center gap-2 font-black text-[9px] uppercase tracking-[0.2em] transition-all group-hover:gap-4 ${
-          variant === "primary" || variant === "dark" ? "text-emerald-300 hover:text-white" : "text-emerald-700 hover:text-emerald-800"
-        }`}>
+        <p className={`text-xs font-medium leading-relaxed mb-6 line-clamp-2 opacity-80 ${variant === "primary" || variant === "dark" ? "text-slate-200" : "text-slate-500"
+          }`}>{desc}</p>
+        <Link href={href} className={`inline-flex items-center gap-2 font-black text-[9px] uppercase tracking-[0.2em] transition-all group-hover:gap-4 ${variant === "primary" || variant === "dark" ? "text-emerald-300 hover:text-white" : "text-emerald-700 hover:text-emerald-800"
+          }`}>
           Explore Service <ArrowRight size={14} />
         </Link>
       </div>

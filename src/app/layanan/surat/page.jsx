@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldCheck, FileText, ClipboardList, CheckCircle, 
-  ArrowRight, ArrowLeft, Loader2, AlertCircle, Search, 
+import {
+  ShieldCheck, FileText, ClipboardList, CheckCircle,
+  ArrowRight, ArrowLeft, Loader2, AlertCircle, Search,
   Copy, Check, Send, Mail, MapPin, Upload, X,
   Users, Baby, GraduationCap, Briefcase, Sparkles, CheckCircle2
 } from 'lucide-react';
@@ -38,7 +38,7 @@ export default function LayananSurat() {
   const [dynamicData, setDynamicData] = useState({});
   const [fileLampiran, setFileLampiran] = useState(null);
   const [successData, setSuccessData] = useState(null);
-  
+
   // ReCAPTCHA State
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const recaptchaRef = useRef(null);
@@ -58,14 +58,14 @@ export default function LayananSurat() {
         console.error("Failed to load saved state", e);
       }
     }
-    
+
     setStep(1); // Always start fresh at step 1
     fetchSuratTypes();
   }, []);
 
   // Persistence: Save State on Changes
   useEffect(() => {
-    if (step >= 1 && step < 4) { 
+    if (step >= 1 && step < 4) {
       const stateToSave = {
         step,
         selectedSurat,
@@ -81,10 +81,10 @@ export default function LayananSurat() {
   // Handle Surat Selection with Auto-Skip Logic
   const handleSelectSurat = (surat) => {
     setSelectedSurat(surat);
-    
+
     // Deteksi cerdas: Jika nama surat mengandung "domisili"
     const isDomisili = surat.name?.toLowerCase().includes('domisili') || surat.id === 'keterangan-domisili';
-    
+
     // If user is already verified in this session, skip step 2
     if (pendudukData && nik && tanggalLahir) {
       setStep(3);
@@ -102,7 +102,7 @@ export default function LayananSurat() {
       setLoading(true);
       setError(null);
       const res = await api.get('/surat-types');
-      
+
       if (res.data.success) {
         setSuratTypes(res.data.data || []);
       } else {
@@ -123,7 +123,7 @@ export default function LayananSurat() {
 
     try {
       const res = await api.post('/search-penduduk', { nik, tanggal_lahir: tanggalLahir });
-      
+
       if (res.data.success) {
         setPendudukData(res.data.data);
         setStep(3);
@@ -151,7 +151,7 @@ export default function LayananSurat() {
     try {
       // Use FormData for Multipart/Form-Data (to handle PDF Upload)
       const data = new FormData();
-      
+
       // Send NIK and Penduduk ID if available, otherwise it's Domisili where it's bypassed
       if (nik) data.append('nik', nik);
       if (tanggalLahir) data.append('tanggal_lahir', tanggalLahir);
@@ -160,36 +160,36 @@ export default function LayananSurat() {
       data.append('surat_type', selectedSurat.id);
       data.append('nama_surat', selectedSurat.name);
       data.append('tanggal_surat', new Date().toISOString().split('T')[0]);
-      
+
       // Keperluan is usually needed, fallback if not available
       data.append('keperluan', formData.keperluan || 'Pengajuan via Layanan Mandiri');
-      
+
       if (formData.email) {
         data.append('email_pengaju', formData.email);
       }
       if (formData.telepon) {
         data.append('no_hp_pengaju', formData.telepon);
       }
-      
+
       data.append('keterangan', formData.keterangan);
-      
+
       // Dynamic Form Data -> JSON String
       if (Object.keys(dynamicData).length > 0) {
         data.append('data_tambahan', JSON.stringify(dynamicData));
       }
 
-      
+
       if (fileLampiran) {
         data.append('file_lampiran', fileLampiran);
       }
-      
+
       const res = await api.post('/surat-pengajuan', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-Recaptcha-Token': recaptchaToken
         }
       });
-      
+
       if (res.data.success) {
         setSuccessData(res.data.data);
         setStep(4);
@@ -211,7 +211,7 @@ export default function LayananSurat() {
 
   const copyToClipboard = async (text) => {
     if (!text) return;
-    
+
     try {
       // Prioritaskan Navigator API (Modern Browsers)
       if (navigator?.clipboard?.writeText) {
@@ -230,18 +230,18 @@ export default function LayananSurat() {
   const fallbackCopyTextToClipboard = (text) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
-    
+
     // Harus fixed agar tidak scroll otomatis ke bawah document
     textArea.style.position = "fixed";
     textArea.style.top = "0";
     textArea.style.left = "0";
     textArea.style.opacity = "0";
-    
+
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
     textArea.setSelectionRange(0, 99999); // Untuk iOS
-    
+
     try {
       const successful = document.execCommand('copy');
       if (successful) {
@@ -252,7 +252,7 @@ export default function LayananSurat() {
     } catch (err) {
       console.error('Fallback copy failed', err);
     }
-    
+
     document.body.removeChild(textArea);
   };
 
@@ -277,7 +277,7 @@ export default function LayananSurat() {
 
   return (
     <main className="min-h-screen bg-white pb-20">
-      <PageHeader 
+      <PageHeader
         title={<>Layanan <span className="text-emerald-700">Surat Digital</span></>}
         description="Proses cepat, aman, dan tanpa antre. Urus kebutuhan administrasi kependudukan Anda secara mandiri di mana saja dan kapan saja."
         breadcrumbs={[
@@ -297,16 +297,14 @@ export default function LayananSurat() {
             { id: 4, name: "Selesai", icon: <CheckCircle size={20} /> }
           ].map((s) => (
             <div key={s.id} className="relative z-10 flex flex-col items-center">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${
-                step >= s.id 
-                ? "bg-emerald-700 text-white shadow-lg shadow-emerald-200 scale-110" 
-                : "bg-white text-slate-400 border border-slate-100 shadow-sm"
-              }`}>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 ${step >= s.id
+                  ? "bg-emerald-700 text-white shadow-lg shadow-emerald-200 scale-110"
+                  : "bg-white text-slate-400 border border-slate-100 shadow-sm"
+                }`}>
                 {s.icon}
               </div>
-              <span className={`mt-3 text-[10px] font-bold uppercase tracking-widest ${
-                step >= s.id ? "text-emerald-800" : "text-slate-300"
-              }`}>
+              <span className={`mt-3 text-[10px] font-bold uppercase tracking-widest ${step >= s.id ? "text-emerald-800" : "text-slate-300"
+                }`}>
                 {s.name}
               </span>
             </div>
@@ -316,10 +314,10 @@ export default function LayananSurat() {
         {/* Content Card */}
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px]">
           <AnimatePresence mode="wait">
-            
+
             {/* Step 1: Pilih Jenis Surat */}
             {step === 1 && (
-              <motion.div 
+              <motion.div
                 key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="p-8 md:p-12"
               >
@@ -327,7 +325,7 @@ export default function LayananSurat() {
                   <h2 className="text-2xl font-bold text-slate-800">Pilih Jenis Layanan</h2>
                   <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input 
+                    <input
                       type="text" placeholder="Cari layanan..."
                       className="pl-12 pr-6 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none w-full md:w-72 transition-all font-medium"
                     />
@@ -336,7 +334,7 @@ export default function LayananSurat() {
 
                 {loading ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1,2,3,4,5,6].map(i => (
+                    {[1, 2, 3, 4, 5, 6].map(i => (
                       <div key={i} className="h-32 bg-slate-50 animate-pulse rounded-[2rem]"></div>
                     ))}
                   </div>
@@ -372,7 +370,7 @@ export default function LayananSurat() {
 
             {/* Step 2: Verifikasi Identitas */}
             {step === 2 && (
-              <motion.div 
+              <motion.div
                 key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                 className="p-8 md:p-12 lg:p-16 w-full"
               >
@@ -392,7 +390,7 @@ export default function LayananSurat() {
                     <form onSubmit={handleVerifyIdentity} className="space-y-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">NIK (Sesuai KTP)</label>
-                        <input 
+                        <input
                           required type="text" value={nik} onChange={(e) => setNik(e.target.value)}
                           placeholder="Masukkan 16 digit NIK"
                           className="w-full px-6 py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all text-xl font-black tracking-widest text-slate-900 placeholder:text-slate-300"
@@ -400,7 +398,7 @@ export default function LayananSurat() {
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tanggal Lahir</label>
-                        <input 
+                        <input
                           required type="date" value={tanggalLahir} onChange={(e) => setTanggalLahir(e.target.value)}
                           className="w-full px-6 py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all text-xl font-black text-slate-900"
                         />
@@ -409,22 +407,22 @@ export default function LayananSurat() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email (Opsional)</label>
-                          <input 
-                            type="email" value={formData.email || ""} onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          <input
+                            type="email" value={formData.email || ""} onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             placeholder="anda@email.com"
                             className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all text-sm font-bold text-slate-900 placeholder:font-medium"
                           />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Telepon (Opsional)</label>
-                          <input 
-                            type="tel" value={formData.telepon || ""} onChange={(e) => setFormData({...formData, telepon: e.target.value})}
+                          <input
+                            type="tel" value={formData.telepon || ""} onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
                             placeholder="0812xxxxxxxx"
                             className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all text-sm font-bold text-slate-900 placeholder:font-medium"
                           />
                         </div>
                       </div>
-                      
+
                       {error && (
                         <div className="p-5 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold flex items-start gap-4">
                           <AlertCircle size={20} className="shrink-0 mt-0.5" />
@@ -432,7 +430,7 @@ export default function LayananSurat() {
                         </div>
                       )}
 
-                      <Button 
+                      <Button
                         type="submit"
                         disabled={verifying}
                         isLoading={verifying}
@@ -459,9 +457,9 @@ export default function LayananSurat() {
                         <p className="text-sm font-medium text-slate-400 leading-relaxed mb-10">
                           Sistem ini terintegrasi dengan database kependudukan. <span className="text-emerald-400 font-bold">Semua data di backend adalah data dummy simulasi, tidak ada data asli masyarakat demi keamanan.</span> Gunakan data simulasi berikut untuk mencoba alur aplikasi:
                         </p>
-                        
+
                         <div className="space-y-6">
-                          <div 
+                          <div
                             onClick={() => { setNik("1234567812345678"); setTanggalLahir("1990-01-01"); }}
                             className="p-6 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 rounded-3xl cursor-pointer transition-all group"
                           >
@@ -473,7 +471,7 @@ export default function LayananSurat() {
                             <p className="text-[11px] font-bold text-slate-500 mt-2">Lahir: 01-01-1990 <span className="text-slate-600 ml-2">(User Demo A)</span></p>
                           </div>
 
-                          <div 
+                          <div
                             onClick={() => { setNik("8888999988889999"); setTanggalLahir("1985-05-20"); }}
                             className="p-6 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 rounded-3xl cursor-pointer transition-all group"
                           >
@@ -485,7 +483,7 @@ export default function LayananSurat() {
                             <p className="text-[11px] font-bold text-slate-500 mt-2">Lahir: 20-05-1985 <span className="text-slate-600 ml-2">(User Demo B)</span></p>
                           </div>
                         </div>
-                        
+
                         <div className="mt-10 p-5 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
                           <p className="text-[10px] text-emerald-400/80 font-bold leading-relaxed italic">
                             ⚠️ Perhatian: Seluruh data di atas divalidasi ketat oleh sistem backend. Jika NIK atau Tanggal Lahir tidak sesuai, pengajuan tidak dapat dilanjutkan.
@@ -500,33 +498,33 @@ export default function LayananSurat() {
 
             {/* Step 3: Isi Formulir Detail */}
             {step === 3 && (
-              <motion.div 
+              <motion.div
                 key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                 className="p-8 md:p-12"
               >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                    {/* Sidebar Info & Requirements */}
-                    <div className="lg:col-span-4 space-y-6">
-                      <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Persyaratan</h3>
-                        <div className="space-y-4">
-                          {selectedSurat?.persyaratan ? (
-                            selectedSurat.persyaratan.split('\n').map((item, idx) => (
-                              <div key={idx} className="flex items-start gap-3">
-                                <div className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                                  <Check size={12} strokeWidth={4} />
-                                </div>
-                                <p className="text-sm font-medium text-slate-600 leading-tight">{item.trim()}</p>
+                  {/* Sidebar Info & Requirements */}
+                  <div className="lg:col-span-4 space-y-6">
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Persyaratan</h3>
+                      <div className="space-y-4">
+                        {selectedSurat?.persyaratan ? (
+                          selectedSurat.persyaratan.split('\n').map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-3">
+                              <div className="w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                                <Check size={12} strokeWidth={4} />
                               </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-slate-400 italic">Tidak ada persyaratan khusus.</p>
-                          )}
-                        </div>
+                              <p className="text-sm font-medium text-slate-600 leading-tight">{item.trim()}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-slate-400 italic">Tidak ada persyaratan khusus.</p>
+                        )}
                       </div>
+                    </div>
 
-                      <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Identitas Pemohon</h3>
+                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Identitas Pemohon</h3>
                       <div className="space-y-6">
                         <div className="flex items-start gap-4">
                           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-700 shadow-sm shrink-0">
@@ -546,8 +544,8 @@ export default function LayananSurat() {
                             <p className="text-sm font-medium text-slate-600 leading-relaxed">{pendudukData?.alamat}</p>
                           </div>
                         </div>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => { setPendudukData(null); setStep(2); }}
                           className="w-full py-3 bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mt-4"
                         >
@@ -555,7 +553,7 @@ export default function LayananSurat() {
                         </button>
                       </div>
                     </div>
-                    
+
                     <div className="p-8 bg-emerald-800 rounded-[2.5rem] text-white shadow-xl shadow-emerald-200">
                       <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
                         <FileText size={24} className="text-emerald-300" />
@@ -579,18 +577,18 @@ export default function LayananSurat() {
                             <div key={idx} className="space-y-3">
                               <label className="text-sm font-bold text-slate-700 ml-1">{field.label}</label>
                               {field.type === 'textarea' ? (
-                                <textarea 
-                                  required 
+                                <textarea
+                                  required
                                   value={dynamicData[field.name] || ''}
-                                  onChange={(e) => setDynamicData({...dynamicData, [field.name]: e.target.value})}
+                                  onChange={(e) => setDynamicData({ ...dynamicData, [field.name]: e.target.value })}
                                   placeholder={`Masukkan ${field.label}`}
                                   className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
                                 />
                               ) : field.type === 'select' ? (
-                                <select 
+                                <select
                                   required
                                   value={dynamicData[field.name] || ''}
-                                  onChange={(e) => setDynamicData({...dynamicData, [field.name]: e.target.value})}
+                                  onChange={(e) => setDynamicData({ ...dynamicData, [field.name]: e.target.value })}
                                   className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
                                 >
                                   <option value="" disabled>Pilih {field.label}</option>
@@ -599,10 +597,10 @@ export default function LayananSurat() {
                                   ))}
                                 </select>
                               ) : (
-                                <input 
-                                  required type={field.type || 'text'} 
+                                <input
+                                  required type={field.type || 'text'}
                                   value={dynamicData[field.name] || ''}
-                                  onChange={(e) => setDynamicData({...dynamicData, [field.name]: e.target.value})}
+                                  onChange={(e) => setDynamicData({ ...dynamicData, [field.name]: e.target.value })}
                                   placeholder={`Masukkan ${field.label}`}
                                   className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
                                 />
@@ -612,22 +610,22 @@ export default function LayananSurat() {
                         ) : (
                           <div className="space-y-3">
                             <label className="text-sm font-bold text-slate-700 ml-1">Keperluan Pembuatan Surat</label>
-                            <input 
-                              required type="text" value={formData.keperluan} 
-                              onChange={(e) => setFormData({...formData, keperluan: e.target.value})}
+                            <input
+                              required type="text" value={formData.keperluan}
+                              onChange={(e) => setFormData({ ...formData, keperluan: e.target.value })}
                               placeholder="Contoh: Persyaratan Melamar Kerja di PT Maju Mundur"
                               className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
                             />
                           </div>
                         )}
-                        
+
                         <div className="space-y-3">
                           <label className="text-sm font-bold text-slate-700 ml-1">Nomor WhatsApp Aktif</label>
                           <div className="relative">
                             <div className="absolute left-6 top-1/2 -translate-y-1/2 font-bold text-slate-400">+62</div>
-                            <input 
+                            <input
                               required type="tel" value={formData.telepon}
-                              onChange={(e) => setFormData({...formData, telepon: e.target.value})}
+                              onChange={(e) => setFormData({ ...formData, telepon: e.target.value })}
                               placeholder="812xxxxxxxx"
                               className="w-full pl-16 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold text-slate-900"
                             />
@@ -637,10 +635,9 @@ export default function LayananSurat() {
                         <div className="space-y-3">
                           <label className="text-sm font-bold text-slate-700 ml-1">Lampiran Dokumen PDF</label>
                           <p className="text-[10px] text-slate-400 font-bold ml-1 mb-2 italic">* Kosongkan saja bagian ini untuk keperluan Demo / Lomba.</p>
-                          <div className={`relative border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center gap-4 ${
-                            fileLampiran ? "border-emerald-500 bg-emerald-50/50" : "border-slate-200 bg-slate-50 hover:bg-white hover:border-emerald-300"
-                          }`}>
-                            <input 
+                          <div className={`relative border-2 border-dashed rounded-2xl p-8 transition-all flex flex-col items-center justify-center gap-4 ${fileLampiran ? "border-emerald-500 bg-emerald-50/50" : "border-slate-200 bg-slate-50 hover:bg-white hover:border-emerald-300"
+                            }`}>
+                            <input
                               type="file" accept="application/pdf"
                               onChange={(e) => setFileLampiran(e.target.files[0])}
                               className="absolute inset-0 opacity-0 cursor-pointer z-10"
@@ -655,7 +652,7 @@ export default function LayananSurat() {
                               <p className="text-xs text-slate-400 font-medium mt-1">Hanya file PDF (Maks. 2MB)</p>
                             </div>
                             {fileLampiran && (
-                              <button 
+                              <button
                                 type="button" onClick={() => setFileLampiran(null)}
                                 className="absolute top-4 right-4 p-2 bg-white text-red-500 rounded-xl shadow-sm hover:bg-red-50 transition-all z-20"
                               >
@@ -666,20 +663,20 @@ export default function LayananSurat() {
                         </div>
                         <div className="space-y-3">
                           <label className="text-sm font-bold text-slate-700 ml-1">Catatan Tambahan (Opsional)</label>
-                          <textarea 
+                          <textarea
                             rows={3} value={formData.keterangan}
-                            onChange={(e) => setFormData({...formData, keterangan: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, keterangan: e.target.value })}
                             placeholder="Tulis informasi tambahan jika ada..."
                             className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-100 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium text-slate-900"
                           ></textarea>
                         </div>
-                        
-                        {process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY && (
+
+                        {process.env.NEXT_RECAPTCHA_V2_SITE_KEY && (
                           <div className="space-y-3 flex flex-col items-start justify-center">
                             <label className="text-sm font-bold text-slate-700 ml-1">Keamanan ReCAPTCHA</label>
                             <ReCAPTCHA
                               ref={recaptchaRef}
-                              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_V2_SITE_KEY}
+                              sitekey={process.env.NEXT_RECAPTCHA_V2_SITE_KEY}
                               onChange={setRecaptchaToken}
                             />
                           </div>
@@ -694,8 +691,8 @@ export default function LayananSurat() {
                       )}
 
                       <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        <Button 
-                          type="button" 
+                        <Button
+                          type="button"
                           onClick={() => setStep(2)}
                           variant="outline"
                           size="lg"
@@ -704,7 +701,7 @@ export default function LayananSurat() {
                         >
                           Batal
                         </Button>
-                        <Button 
+                        <Button
                           type="submit"
                           disabled={submitting}
                           isLoading={submitting}
@@ -724,19 +721,19 @@ export default function LayananSurat() {
 
             {/* Step 4: Success Message */}
             {step === 4 && (
-              <motion.div 
+              <motion.div
                 key="step4" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                 className="p-12 md:p-24 text-center max-w-3xl mx-auto"
               >
                 <div className="w-28 h-28 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-10 shadow-inner relative">
                   <CheckCircle size={72} className="relative z-10" />
-                  <motion.div 
+                  <motion.div
                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.1, 0.3] }}
                     transition={{ repeat: Infinity, duration: 2 }}
                     className="absolute inset-0 bg-emerald-400 rounded-full"
                   />
                 </div>
-                
+
                 <h2 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Pengajuan Terkirim!</h2>
                 <p className="text-slate-500 text-lg mb-12 font-medium">
                   Terima kasih <span className="text-slate-900 font-bold">{pendudukData?.nama}</span>. Pengajuan surat Anda telah masuk ke sistem dan akan diproses dalam waktu 1x24 jam.
@@ -748,43 +745,42 @@ export default function LayananSurat() {
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-4">Nomor Pengajuan (Tracking ID)</p>
                     <div className="flex flex-col items-center">
                       <div className="flex items-center justify-center gap-4">
-                      <span className="text-4xl md:text-5xl font-mono font-black text-white tracking-tighter">
-                        {successData?.nomor_pengajuan || successData?.nomor_surat || "#CBT-2026-00452"}
-                      </span>
-                      <button 
-                        onClick={() => copyToClipboard(successData?.nomor_pengajuan || successData?.nomor_surat || "#CBT-2026-00452")}
-                        className={`p-3 rounded-xl transition-all active:scale-90 ${
-                          copied ? 'bg-emerald-600 text-white' : 'bg-white/10 hover:bg-emerald-600 text-white'
-                        }`}
-                      >
-                        {copied ? <Check size={20} /> : <Copy size={20} />}
-                      </button>
-                    </div>
-                    <AnimatePresence>
-                      {copied && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="mt-4 flex items-center gap-2 text-emerald-400 font-bold text-xs bg-emerald-400/10 px-4 py-2 rounded-full border border-emerald-400/20"
+                        <span className="text-4xl md:text-5xl font-mono font-black text-white tracking-tighter">
+                          {successData?.nomor_pengajuan || successData?.nomor_surat || "#CBT-2026-00452"}
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(successData?.nomor_pengajuan || successData?.nomor_surat || "#CBT-2026-00452")}
+                          className={`p-3 rounded-xl transition-all active:scale-90 ${copied ? 'bg-emerald-600 text-white' : 'bg-white/10 hover:bg-emerald-600 text-white'
+                            }`}
                         >
-                          <CheckCircle2 size={14} /> NOMOR BERHASIL DISALIN!
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                          {copied ? <Check size={20} /> : <Copy size={20} />}
+                        </button>
+                      </div>
+                      <AnimatePresence>
+                        {copied && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="mt-4 flex items-center gap-2 text-emerald-400 font-bold text-xs bg-emerald-400/10 px-4 py-2 rounded-full border border-emerald-400/20"
+                          >
+                            <CheckCircle2 size={14} /> NOMOR BERHASIL DISALIN!
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3 justify-center mb-8">
-                  <Button 
+                  <Button
                     onClick={() => setStep(1)}
                     icon={<ArrowRight size={18} />}
                     iconPosition="right"
                   >
                     Ajukan Surat Lain
                   </Button>
-                  <Button 
+                  <Button
                     href="/layanan/status"
                     variant="secondary"
                     className="bg-blue-600 hover:bg-blue-700 shadow-blue-200/50 text-white"
@@ -793,7 +789,7 @@ export default function LayananSurat() {
                   >
                     Cek Status
                   </Button>
-                  <Button 
+                  <Button
                     href="/"
                     variant="ghost"
                   >
