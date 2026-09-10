@@ -93,7 +93,7 @@ Proyek ini dioptimalkan untuk Cloud Run dengan fitur Next.js *Standalone Build*.
 3. **Inject Runtime Variable (Jika diperlukan):**
    ```bash
    gcloud run services update cibatu-vibe-ai --region asia-southeast2 \
-   --set-env-vars="INTERNAL_API_URL=https://admin.pemdescibatu2001.online,PROXY_KEY=CIBATU_VIBE_2026"
+   --set-env-vars="INTERNAL_API_URL=https://admin.pemdescibatu2001.online,PROXY_KEY=CIBATU_VIBE"
    ```
 
 ## 📝 Catatan Versi
