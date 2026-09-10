@@ -450,43 +450,50 @@ export default function LayananSurat() {
                       <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-8">
                           <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-emerald-400">
-                            <Sparkles size={20} />
+                            <ShieldCheck size={20} />
                           </div>
-                          <h4 className="font-black text-[10px] uppercase tracking-[0.3em] text-emerald-500">Simulasi Data Terpadu</h4>
+                          <h4 className="font-black text-[10px] uppercase tracking-[0.3em] text-emerald-500">Panduan Verifikasi Warga</h4>
                         </div>
-                        <p className="text-sm font-medium text-slate-400 leading-relaxed mb-10">
-                          Sistem ini terintegrasi dengan database kependudukan. <span className="text-emerald-400 font-bold">Semua data di backend adalah data dummy simulasi, tidak ada data asli masyarakat demi keamanan.</span> Gunakan data simulasi berikut untuk mencoba alur aplikasi:
+                        <p className="text-sm font-medium text-slate-400 leading-relaxed mb-8">
+                          Untuk menjaga keakuratan dokumen dan keamanan data kependudukan, pengajuan surat membutuhkan verifikasi identitas resmi.
                         </p>
 
-                        <div className="space-y-6">
-                          <div
-                            onClick={() => { setNik("1234567812345678"); setTanggalLahir("1990-01-01"); }}
-                            className="p-6 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 rounded-3xl cursor-pointer transition-all group"
-                          >
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-500">Profil Simulasi A</span>
-                              <CheckCircle2 size={16} className="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="space-y-4">
+                          <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black flex items-center justify-center">1</span>
+                              <h5 className="text-sm font-bold text-white">Kesesuaian Identitas</h5>
                             </div>
-                            <p className="font-mono text-xl font-black tracking-widest text-white">1234567812345678</p>
-                            <p className="text-[11px] font-bold text-slate-500 mt-2">Lahir: 01-01-1990 <span className="text-slate-600 ml-2">(User Demo A)</span></p>
+                            <p className="text-xs text-slate-400 pl-9 leading-relaxed">
+                              Pastikan NIK 16 digit dan Tanggal Lahir sesuai dengan KTP elektronik atau Kartu Keluarga yang terdaftar.
+                            </p>
                           </div>
 
-                          <div
-                            onClick={() => { setNik("8888999988889999"); setTanggalLahir("1985-05-20"); }}
-                            className="p-6 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 rounded-3xl cursor-pointer transition-all group"
-                          >
-                            <div className="flex justify-between items-center mb-3">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Profil Simulasi B</span>
-                              <CheckCircle2 size={16} className="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black flex items-center justify-center">2</span>
+                              <h5 className="text-sm font-bold text-white">Validasi Otomatis</h5>
                             </div>
-                            <p className="font-mono text-xl font-black tracking-widest text-white">8888999988889999</p>
-                            <p className="text-[11px] font-bold text-slate-500 mt-2">Lahir: 20-05-1985 <span className="text-slate-600 ml-2">(User Demo B)</span></p>
+                            <p className="text-xs text-slate-400 pl-9 leading-relaxed">
+                              Sistem akan mencocokkan data secara instan dengan database desa untuk mengisi profil Anda secara otomatis.
+                            </p>
+                          </div>
+
+                          <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black flex items-center justify-center">3</span>
+                              <h5 className="text-sm font-bold text-white">Pelacakan Real-Time</h5>
+                            </div>
+                            <p className="text-xs text-slate-400 pl-9 leading-relaxed">
+                              Setelah pengajuan dikirim, Anda akan memperoleh nomor registrasi untuk memantau status surat di menu Cek Status.
+                            </p>
                           </div>
                         </div>
 
-                        <div className="mt-10 p-5 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
-                          <p className="text-[10px] text-emerald-400/80 font-bold leading-relaxed italic">
-                            ⚠️ Perhatian: Seluruh data di atas divalidasi ketat oleh sistem backend. Jika NIK atau Tanggal Lahir tidak sesuai, pengajuan tidak dapat dilanjutkan.
+                        <div className="mt-8 p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-start gap-3">
+                          <ShieldCheck size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-emerald-300 font-medium leading-relaxed">
+                            Data pribadi Anda terlindungi dan dienkripsi. Kami tidak membagikan data identitas kepada pihak ketiga.
                           </p>
                         </div>
                       </div>
