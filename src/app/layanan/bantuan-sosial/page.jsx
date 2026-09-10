@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, User, Info, AlertCircle, CreditCard, CalendarDays, Wallet, CheckCircle } from 'lucide-react';
+import { Search, User, Info, AlertCircle, CreditCard, CalendarDays, Wallet, CheckCircle, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
@@ -166,6 +166,35 @@ export default function BantuanSosialPage() {
                 </Button>
               </form>
             </GlassCard>
+
+            {/* Portal Resmi Kemensos & Cek Desil */}
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl border border-white/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+              
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                  <Info size={20} />
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Pemerintah Pusat</span>
+                  <h4 className="text-sm font-bold text-white">Cek Bansos & Desil Kemensos</h4>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed mb-6 font-normal">
+                Pencarian di atas memeriksa data penerima bantuan sosial di tingkat desa. Untuk memeriksa kepesertaan bansos resmi pemerintah pusat (<span className="text-emerald-300 font-bold">PKH, BPNT, BST, PBI-JK</span>) serta mengecek status kelompok <span className="text-emerald-300 font-bold">Desil</span> pada data DTKS, silakan kunjungi portal resmi Kementerian Sosial RI.
+              </p>
+
+              <a
+                href="https://cekbansos.kemensos.go.id/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/30 group"
+              >
+                <span>Buka cekbansos.kemensos.go.id</span>
+                <ExternalLink size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </a>
+            </div>
           </div>
 
           {/* Results Column */}
@@ -315,8 +344,19 @@ export default function BantuanSosialPage() {
                       <div className="w-20 h-20 bg-slate-200/50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle className="w-10 h-10 text-slate-400" />
                       </div>
-                      <h5 className="text-xl font-black text-slate-800 mb-2 tracking-tight">Tidak Ada Data Bantuan</h5>
-                      <p className="text-sm font-medium text-slate-500">Penduduk ini tidak terdaftar sebagai penerima program bantuan sosial manapun saat ini.</p>
+                      <h5 className="text-xl font-black text-slate-800 mb-2 tracking-tight">Tidak Ditemukan di Database Desa</h5>
+                      <p className="text-sm font-medium text-slate-500 max-w-md mx-auto mb-6">
+                        NIK ini tidak tercatat sebagai penerima program bantuan sosial tingkat desa saat ini. Untuk mengecek kepesertaan bansos nasional (PKH, BPNT, BST) atau kelompok desil resmi dari pemerintah pusat, silakan periksa di portal Kemensos.
+                      </p>
+                      <a
+                        href="https://cekbansos.kemensos.go.id/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-2xl shadow-sm transition-all"
+                      >
+                        <span>Cek di cekbansos.kemensos.go.id</span>
+                        <ExternalLink size={14} />
+                      </a>
                     </GlassCard>
                   </motion.div>
                 )}

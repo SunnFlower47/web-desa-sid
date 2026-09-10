@@ -23,6 +23,7 @@ export default function LayananSurat() {
   const [submitting, setSubmitting] = useState(false);
   const [suratTypes, setSuratTypes] = useState([]);
   const [selectedSurat, setSelectedSurat] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -326,9 +327,21 @@ export default function LayananSurat() {
                   <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
-                      type="text" placeholder="Cari layanan..."
-                      className="pl-12 pr-6 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none w-full md:w-72 transition-all font-medium"
+                      type="text"
+                      placeholder="Cari layanan surat..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-12 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none w-full md:w-80 transition-all font-medium text-slate-800"
                     />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-all"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -348,22 +361,57 @@ export default function LayananSurat() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {suratTypes.map((surat) => (
-                      <motion.div
-                        key={surat.id}
-                        whileHover={{ y: -8, scale: 1.02 }}
-                        onClick={() => handleSelectSurat(surat)}
-                        className="p-8 rounded-[2rem] border border-slate-50 bg-slate-50 hover:bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-100/50 cursor-pointer transition-all group"
-                      >
-                        <div className={`w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:bg-emerald-700 group-hover:text-white transition-all text-emerald-700`}>
-                          {getSuratIcon(surat.icon)}
+                  (() => {
+                    const filteredSuratTypes = suratTypes.filter((surat) => {
+                      const q = searchQuery.toLowerCase().trim();
+                      if (!q) return true;
+                      return (
+                        surat.name?.toLowerCase().includes(q) ||
+                        surat.description?.toLowerCase().includes(q) ||
+                        surat.id?.toLowerCase().includes(q)
+                      );
+                    });
+
+                    if (filteredSuratTypes.length === 0) {
+                      return (
+                        <div className="text-center py-16 bg-slate-50/70 border border-dashed border-slate-200 rounded-[2.5rem] p-8">
+                          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
+                            <Search size={28} />
+                          </div>
+                          <h4 className="text-base font-bold text-slate-700 mb-1">Layanan tidak ditemukan</h4>
+                          <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
+                            Tidak ditemukan jenis surat dengan kata kunci <span className="font-bold text-slate-600">"{searchQuery}"</span>.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery("")}
+                            className="px-5 py-2.5 bg-emerald-700 text-white font-bold text-xs rounded-xl hover:bg-emerald-800 transition-all shadow-sm"
+                          >
+                            Tampilkan Semua Layanan
+                          </button>
                         </div>
-                        <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-emerald-900 tracking-tight">{surat.name}</h3>
-                        <p className="text-sm text-slate-400 font-medium leading-relaxed">Klik untuk mulai mengisi formulir {surat.name}.</p>
-                      </motion.div>
-                    ))}
-                  </div>
+                      );
+                    }
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredSuratTypes.map((surat) => (
+                          <motion.div
+                            key={surat.id}
+                            whileHover={{ y: -8, scale: 1.02 }}
+                            onClick={() => handleSelectSurat(surat)}
+                            className="p-8 rounded-[2rem] border border-slate-50 bg-slate-50 hover:bg-white hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-100/50 cursor-pointer transition-all group"
+                          >
+                            <div className={`w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm group-hover:bg-emerald-700 group-hover:text-white transition-all text-emerald-700`}>
+                              {getSuratIcon(surat.icon)}
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-emerald-900 tracking-tight">{surat.name}</h3>
+                            <p className="text-sm text-slate-400 font-medium leading-relaxed">Klik untuk mulai mengisi formulir {surat.name}.</p>
+                          </motion.div>
+                        ))}
+                      </div>
+                    );
+                  })()
                 )}
               </motion.div>
             )}
