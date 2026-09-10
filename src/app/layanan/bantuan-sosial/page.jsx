@@ -93,14 +93,50 @@ export default function BantuanSosialPage() {
     <main className="min-h-screen bg-white pb-20">
       <PageHeader 
         title={<>Cek <span className="text-emerald-700">Bantuan Sosial</span></>}
-        description="Fasilitas pengecekan status kepesertaan program bantuan sosial secara mandiri, transparan, dan real-time bagi warga desa."
+        description="Fasilitas pengecekan status kepesertaan program bantuan sosial desa secara mandiri dan transparan bagi warga desa."
         breadcrumbs={[
           { label: 'Layanan', href: '#' },
           { label: 'Bantuan Sosial' }
         ]}
       />
 
-      <div className="container mx-auto px-6 max-w-6xl mt-8 relative z-20">
+      <div className="container mx-auto px-6 max-w-6xl mt-8 relative z-20 space-y-8">
+        {/* Banner Rekomendasi Resmi Kemensos RI & Cek Desil */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-[2.5rem] p-6 md:p-8 text-white shadow-xl border border-emerald-500/20 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-start gap-4 max-w-3xl">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold shrink-0 border border-emerald-500/30">
+                <Info size={24} />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Rekomendasi Utama &bull; Data Terpusat
+                  </span>
+                </div>
+                <h3 className="text-lg md:text-xl font-black text-white tracking-tight">
+                  Cek Bantuan Sosial Nasional & Status Desil Kemensos
+                </h3>
+                <p className="text-xs md:text-sm text-slate-300 leading-relaxed font-normal">
+                  Data bantuan sosial pada sistem desa merupakan arsip lokal dan <strong className="text-white">tidak terbarui secara real-time</strong>. Untuk memeriksa kepesertaan bansos resmi pemerintah pusat (<span className="text-emerald-300 font-semibold">PKH, BPNT, BST, PBI-JK</span>) serta pengecekan peringkat kelompok <span className="text-emerald-300 font-semibold">Desil</span> pada data DTKS terbaru, warga disarankan melakukan pengecekan langsung melalui portal resmi Kementerian Sosial RI.
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="https://cekbansos.kemensos.go.id/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 w-full md:w-auto py-3.5 px-6 bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-emerald-950/50 hover:shadow-emerald-600/30 group border border-emerald-400/30"
+            >
+              <span>Buka cekbansos.kemensos.go.id</span>
+              <ExternalLink size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-12 gap-10">
           
           {/* Form Column */}
@@ -108,7 +144,7 @@ export default function BantuanSosialPage() {
             <GlassCard padding="p-8 md:p-10" className="space-y-8 bg-slate-50 border-slate-100 mb-8 sticky top-32">
               <h2 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2 tracking-tight">
                 <Search className="w-5 h-5 text-emerald-500" />
-                Cek Kepesertaan
+                Cek Kepesertaan Desa
               </h2>
 
               <form onSubmit={handleSearch} className="space-y-6">
@@ -166,35 +202,6 @@ export default function BantuanSosialPage() {
                 </Button>
               </form>
             </GlassCard>
-
-            {/* Portal Resmi Kemensos & Cek Desil */}
-            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl border border-white/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-              
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                  <Info size={20} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Pemerintah Pusat</span>
-                  <h4 className="text-sm font-bold text-white">Cek Bansos & Desil Kemensos</h4>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-300 leading-relaxed mb-6 font-normal">
-                Pencarian di atas memeriksa data penerima bantuan sosial di tingkat desa. Untuk memeriksa kepesertaan bansos resmi pemerintah pusat (<span className="text-emerald-300 font-bold">PKH, BPNT, BST, PBI-JK</span>) serta mengecek status kelompok <span className="text-emerald-300 font-bold">Desil</span> pada data DTKS, silakan kunjungi portal resmi Kementerian Sosial RI.
-              </p>
-
-              <a
-                href="https://cekbansos.kemensos.go.id/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-900/30 group"
-              >
-                <span>Buka cekbansos.kemensos.go.id</span>
-                <ExternalLink size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </a>
-            </div>
           </div>
 
           {/* Results Column */}
