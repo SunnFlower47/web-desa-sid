@@ -80,7 +80,7 @@
 ## [12:40] fix — Pembaruan dependensi runtime aman (axios & next) untuk mitigasi kerentanan keamanan
 - Ringkasan: Memperbarui paket runtime `axios` (dari ^1.16.0 ke ^1.21.0) dan `next` (dari 16.2.6 ke ^16.4.5 beserta `eslint-config-next`) ke versi patch/minor aman tanpa lompatan major dan tanpa `--force`. Menghilangkan seluruh advisory tingkat CRITICAL (turun dari 1 ke 0) dan memangkas kerentanan total dari 22 menjadi 16. Seluruh sisa 16 advisory berstatus dev-only/transitive pada linter/parser internal tanpa mengekspos attack surface ke browser warga.
 - File: `package.json`, `package-lock.json`
-- Commit: `<hash>`
+- Commit: `618fcb3`
 - Test: `npm audit`, `npm run build` (success 18/18 routes Next.js 16.4.5)
 - Dampak/risiko: Mengeliminasi kerentanan prototype pollution pada axios dan denial-of-service/RCE pada versi awal Next.js 16.
 - Rollback: `git revert HEAD`
