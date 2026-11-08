@@ -44,19 +44,19 @@ export default function LayananSurat() {
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const recaptchaRef = useRef(null);
 
-  // Persistence: Load State on Mount
+  // Persistence: Load Non-PII State on Mount (Hanya jenis surat & preferensi non-sensitif)
   useEffect(() => {
     const savedState = sessionStorage.getItem('surat_form_state');
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
-        // We always start at step 1 for a better flow, but we keep the identity data
-        setNik(parsed.nik || "");
-        setTanggalLahir(parsed.tanggalLahir || "");
-        setPendudukData(parsed.pendudukData || null);
-        setFormData(parsed.formData || { keperluan: "", telepon: "", keterangan: "" });
+        // PII (nik, tanggalLahir, pendudukData) DILARANG disimpan di browser storage (UU PDP)
+        if (parsed.selectedSurat) {
+          setSelectedSurat(parsed.selectedSurat);
+        }
       } catch (e) {
         console.error("Failed to load saved state", e);
+        sessionStorage.removeItem('surat_form_state');
       }
     }
 
@@ -64,20 +64,20 @@ export default function LayananSurat() {
     fetchSuratTypes();
   }, []);
 
-  // Persistence: Save State on Changes
+  // Persistence: Save ONLY Non-PII State on Changes
   useEffect(() => {
     if (step >= 1 && step < 4) {
       const stateToSave = {
         step,
-        selectedSurat,
-        nik,
-        tanggalLahir,
-        pendudukData,
-        formData
+        selectedSurat: selectedSurat ? {
+          id: selectedSurat.id,
+          name: selectedSurat.name,
+          category: selectedSurat.category,
+        } : null,
       };
       sessionStorage.setItem('surat_form_state', JSON.stringify(stateToSave));
     }
-  }, [step, selectedSurat, nik, tanggalLahir, pendudukData, formData]);
+  }, [step, selectedSurat]);
 
   // Handle Surat Selection with Auto-Skip Logic
   const handleSelectSurat = (surat) => {

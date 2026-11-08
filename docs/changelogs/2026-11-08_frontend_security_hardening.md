@@ -41,3 +41,14 @@
 - Dampak/risiko: File di luar prefix publik tidak dapat diakses melalui endpoint proxy storage.
 - Rollback: `git revert HEAD`
 - Tindakan manual: Tidak ada. Direkomendasikan mengevaluasi migrasi aset publik langsung ke direct URL CDN S3/R2 di masa mendatang untuk mengeliminasi kebutuhan storage proxy.
+
+---
+
+## [12:25] fix — Penghapusan NIK, tanggal lahir, dan data kependudukan dari browser sessionStorage
+- Ringkasan: Menghentikan penyimpanan NIK, tanggal lahir, data identitas penduduk (`pendudukData`), dan data form di `sessionStorage` pada formulir pengajuan surat (`src/app/layanan/surat/page.jsx`). Hanya menyimpan state non-PII (`step`, `selectedSurat`) di storage peramban. Seluruh identitas warga dijaga murni dalam in-memory state React untuk mematuhi UU No. 27/2022 (UU PDP).
+- File: `src/app/layanan/surat/page.jsx`
+- Commit: `<hash>`
+- Test: `npm run build` (success 18/18 routes)
+- Dampak/risiko: Jika halaman di-refresh, pengguna perlu memasukkan kembali NIK dan tanggal lahir demi keamanan data pribadi.
+- Rollback: `git revert HEAD`
+- Tindakan manual: Tidak ada.
