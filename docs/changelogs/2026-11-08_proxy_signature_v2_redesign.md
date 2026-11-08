@@ -41,7 +41,7 @@
   - `src/components/dev/CacheClearButton.jsx`
   - `scripts/e2e-verification.mjs`
   - `docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md`
-- **Commit**: (menunggu commit)
+- **Commit**: 6d94456
 - **Test**:
   - `npm run lint`: PASS (0 errors, 26 warnings)
   - `npm test`: PASS (17 tests passed)
@@ -77,7 +77,7 @@
   - `scripts/test-security.mjs`
   - `scripts/e2e-verification.mjs`
   - `docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md`
-- **Commit**: (menunggu commit)
+- **Commit**: ea5606d
 - **Test**:
   - `npm test`: PASS (21 tests passed, 0 failed)
   - `npm run lint`: PASS (0 errors, 26 warnings)
