@@ -8,7 +8,7 @@ import {
   XCircle, Send, Home, ArrowLeft, Calendar,
   Layers, ChevronRight
 } from 'lucide-react';
-import api from '@/lib/api';
+import { checkSuratStatus, checkSuratHistory } from '@/lib/api';
 import Link from 'next/link';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
@@ -36,16 +36,11 @@ export default function CekStatusSurat() {
     try {
       let res;
       if (searchMode === 'nik') {
-        // Cek Semua Surat pakai NIK + Tanggal Lahir (Security)
-        res = await api.post('/surat-history', {
-          nik: nik,
-          tanggal_lahir: tanggalLahir
-        });
+        // Cek Semua Surat via helper terpusat
+        res = await checkSuratHistory({ nik, tanggalLahir });
       } else {
-        // Cek Spesifik pakai Nomor Resi/Surat + NIK
-        res = await api.get('/surat-status', {
-          params: { nik, nomor_surat: nomorResi }
-        });
+        // Cek Spesifik via helper terpusat (siap untuk transisi POST di masa depan)
+        res = await checkSuratStatus({ nik, nomorSurat: nomorResi });
       }
 
       if (res.data.success && res.data.data.length > 0) {
