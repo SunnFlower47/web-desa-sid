@@ -14,7 +14,7 @@
 ## [12:08] fix — Fail-closed validation untuk kunci proxy dan pembersihan dead HMAC code
 - Ringkasan: Menghapus fallback NEXT_PUBLIC_PROXY_KEY pada route proxy dan kunci bawaan hardcode pada route storage. Menambahkan helper keamanan `validateSecretKey`, `getValidatedProxyKey`, dan `getValidatedStorageKey` di `src/lib/security.js` untuk memvalidasi bahwa kunci server wajib ada, minimal 32 karakter, dan menolak tegas prefiks NEXT_PUBLIC_. Menghapus dead code komputasi HMAC yang tidak terpakai pada route storage.
 - File: `src/lib/security.js`, `src/app/api/proxy/[...path]/route.js`, `src/app/api/storage/[...path]/route.js`
-- Commit: `fc54723`
+- Commit: `6150f3b`
 - Test: `npm run build` (success 18/18 routes)
 - Dampak/risiko: Menjamin sistem menolak beroperasi (fail-closed) jika konfigurasi rahasia salah/lemah dan mencegah kebocoran kunci ke bundle browser.
 - Rollback: `git revert HEAD`
@@ -30,3 +30,14 @@
 - Dampak/risiko: Request liar atau path di luar rute terdaftar akan ditolak dengan 404; request berbahaya ditolak 400.
 - Rollback: `git revert HEAD`
 - Tindakan manual: Tidak ada.
+
+---
+
+## [12:20] fix — Pembatasan storage proxy ke allowlist prefix publik dan penolakan traversal
+- Ringkasan: Menerapkan validasi ketat pada route handler `/api/storage/[...path]` menggunakan `validateStoragePath()`. Hanya mengizinkan berkas publik dengan prefix resmi (`berita/`, `fasilitas-desa/`, `struktur-desa/`, `umkms/`, `logos/`, `profil-desa/`, `kontak-desa/`). Menolak tegas path traversal dengan HTTP 400 dan memblokir akses ke direktori privat (surat permohonan, mutasi, KTP/KK, pengaduan) dengan HTTP 404.
+- File: `src/app/api/storage/[...path]/route.js`
+- Commit: `<hash>`
+- Test: `npm run build` (success 18/18 routes)
+- Dampak/risiko: File di luar prefix publik tidak dapat diakses melalui endpoint proxy storage.
+- Rollback: `git revert HEAD`
+- Tindakan manual: Tidak ada. Direkomendasikan mengevaluasi migrasi aset publik langsung ke direct URL CDN S3/R2 di masa mendatang untuk mengeliminasi kebutuhan storage proxy.

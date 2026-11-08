@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getValidatedStorageKey } from '@/lib/security';
+import { getValidatedStorageKey, validateStoragePath } from '@/lib/security';
 
 export async function GET(request, { params: paramsPromise }) {
   try {
@@ -11,8 +11,18 @@ export async function GET(request, { params: paramsPromise }) {
       return new NextResponse('Path not specified', { status: 400 });
     }
 
-    // Fail-closed validation untuk storage secret key
-    const { key: secretKey, error: keyError } = getValidatedStorageKey();
+    // 1. Validasi Keamanan: Allowlist Prefix Publik & Anti Path Traversal
+    const pathValidation = validateStoragePath(storagePath);
+    if (!pathValidation.allowed) {
+      if (pathValidation.reason === 'PATH_TRAVERSAL_DETECTED') {
+        return new NextResponse('Invalid storage path', { status: 400 });
+      }
+      // Tolak akses ke direktori privat atau prefix tidak dikenal
+      return new NextResponse('Resource not found or private', { status: 404 });
+    }
+
+    // 2. Fail-closed validation untuk storage secret key
+    const { key: secretKey } = getValidatedStorageKey();
     if (!secretKey) {
       return NextResponse.json({
         success: false,
@@ -23,7 +33,7 @@ export async function GET(request, { params: paramsPromise }) {
     const baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
     const backendUrl = baseUrl.replace(/\/$/, "");
     
-    // Pastikan ini langsung ke domain backend, bukan jalur API
+    // Pastikan menuju URL storage publik backend
     const targetUrl = `${backendUrl.replace(/\/api\/v1\/?$/, '')}/storage/${storagePath}`;
 
     const response = await fetch(targetUrl, {
@@ -37,11 +47,10 @@ export async function GET(request, { params: paramsPromise }) {
     });
 
     if (!response.ok) {
-      // Jika masih error, coba tanpa X-Origin (beberapa server sensitif)
+      // Coba retry tanpa X-Origin jika server backend sensitif
       const retryResponse = await fetch(targetUrl);
       if (!retryResponse.ok) {
-        console.error(`Backend storage error: ${retryResponse.status}`);
-        return new NextResponse(`Image not found at backend`, { status: 404 });
+        return new NextResponse('Asset not found', { status: 404 });
       }
       
       const arrayBuffer = await retryResponse.arrayBuffer();
@@ -54,7 +63,7 @@ export async function GET(request, { params: paramsPromise }) {
       });
     }
 
-    // Ambil data binary
+    // Ambil binary data aset publik
     const arrayBuffer = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') || 'image/png';
 
@@ -65,7 +74,7 @@ export async function GET(request, { params: paramsPromise }) {
       },
     });
   } catch (error) {
-    console.error('Storage Proxy Error:', error.message);
-    return new NextResponse(`Internal Server Error: ${error.message}`, { status: 500 });
+    console.error('[Storage-Proxy] Internal error:', error.message);
+    return new NextResponse('Internal server error', { status: 500 });
   }
 }
