@@ -1,0 +1,108 @@
+{
+    "version": "CIBATU-PROXY-V2",
+    "test_key_id": "test-key-id-primary",
+    "test_secret_key": "mock-super-secret-key-at-least-32-chars-long-12345",
+    "timestamp": 1762600000,
+    "nonce": "nonce-random-base64url-token-12345",
+    "client_ip": "203.0.113.50",
+    "cases": [
+        {
+            "case_id": "case_1_get_with_query",
+            "description": "GET request dengan query parameter acak yang harus diurutkan secara kanonik dan di-encode RFC 3986",
+            "request": {
+                "method": "GET",
+                "path": "/api/proxy/v1/berita",
+                "query": {
+                    "sort": "terbaru",
+                    "page": "2",
+                    "kategori": "kegiatan warga"
+                },
+                "body": ""
+            },
+            "canonical": {
+                "canonical_query": "kategori=kegiatan%20warga&page=2&sort=terbaru",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "canonical_string": "CIBATU-PROXY-V2\nGET\n/api/proxy/v1/berita\nkategori=kegiatan%20warga&page=2&sort=terbaru\n1762600000\nnonce-random-base64url-token-12345\n203.0.113.50\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "expected_headers": {
+                "X-Key-Id": "test-key-id-primary",
+                "X-Timestamp": "1762600000",
+                "X-Nonce": "nonce-random-base64url-token-12345",
+                "X-Client-Ip": "203.0.113.50",
+                "X-Content-Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "X-Signature": "1e3e5d2a11905b3d543048420fe1878fdddde0decefd70f1f8042ccd4fd7c4f8"
+            }
+        },
+        {
+            "case_id": "case_2_post_json",
+            "description": "POST request dengan payload JSON untuk cek bantuan sosial",
+            "request": {
+                "method": "POST",
+                "path": "/api/proxy/v1/bantuan-sosial/check",
+                "query": [],
+                "body": "{\"nik\":\"3201123456789012\",\"tanggal_lahir\":\"1990-01-01\",\"recaptcha_token\":\"test-token\"}"
+            },
+            "canonical": {
+                "canonical_query": "",
+                "body_sha256": "7e4863cddcfa71173f2bef3acf378578bb1ba78e7071eb23f03d6351a058ddc5",
+                "canonical_string": "CIBATU-PROXY-V2\nPOST\n/api/proxy/v1/bantuan-sosial/check\n\n1762600000\nnonce-random-base64url-token-12345\n203.0.113.50\n7e4863cddcfa71173f2bef3acf378578bb1ba78e7071eb23f03d6351a058ddc5"
+            },
+            "expected_headers": {
+                "X-Key-Id": "test-key-id-primary",
+                "X-Timestamp": "1762600000",
+                "X-Nonce": "nonce-random-base64url-token-12345",
+                "X-Client-Ip": "203.0.113.50",
+                "X-Content-Sha256": "7e4863cddcfa71173f2bef3acf378578bb1ba78e7071eb23f03d6351a058ddc5",
+                "X-Signature": "b5abb549ca5f12e0ac4c400ae963dc5d2ea15f6db545a9604ec8be666d6d5a3c"
+            }
+        },
+        {
+            "case_id": "case_3_post_empty_body",
+            "description": "POST request dengan body kosong (misal pengambilan tipe surat)",
+            "request": {
+                "method": "POST",
+                "path": "/api/proxy/v1/surat-types",
+                "query": [],
+                "body": ""
+            },
+            "canonical": {
+                "canonical_query": "",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "canonical_string": "CIBATU-PROXY-V2\nPOST\n/api/proxy/v1/surat-types\n\n1762600000\nnonce-random-base64url-token-12345\n203.0.113.50\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "expected_headers": {
+                "X-Key-Id": "test-key-id-primary",
+                "X-Timestamp": "1762600000",
+                "X-Nonce": "nonce-random-base64url-token-12345",
+                "X-Client-Ip": "203.0.113.50",
+                "X-Content-Sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "X-Signature": "858faad9b4dfbd528fdb2f986d6eb238af586eed6d69b001bf223d478e107ea4"
+            }
+        },
+        {
+            "case_id": "case_4_post_multipart_small",
+            "description": "POST request multipart form kecil dengan query param",
+            "request": {
+                "method": "POST",
+                "path": "/api/proxy/v1/pengaduan/submit",
+                "query": {
+                    "source": "web-portal"
+                },
+                "body": "------WebKitFormBoundaryTest\r\nContent-Disposition: form-data; name=\"judul\"\r\n\r\nLampu Jalan Rusak\r\n------WebKitFormBoundaryTest--\r\n"
+            },
+            "canonical": {
+                "canonical_query": "source=web-portal",
+                "body_sha256": "ea6c496a593bff269bf19419a2b5cbf4e06a5109fbe9a15c893e74329b708ca9",
+                "canonical_string": "CIBATU-PROXY-V2\nPOST\n/api/proxy/v1/pengaduan/submit\nsource=web-portal\n1762600000\nnonce-random-base64url-token-12345\n203.0.113.50\nea6c496a593bff269bf19419a2b5cbf4e06a5109fbe9a15c893e74329b708ca9"
+            },
+            "expected_headers": {
+                "X-Key-Id": "test-key-id-primary",
+                "X-Timestamp": "1762600000",
+                "X-Nonce": "nonce-random-base64url-token-12345",
+                "X-Client-Ip": "203.0.113.50",
+                "X-Content-Sha256": "ea6c496a593bff269bf19419a2b5cbf4e06a5109fbe9a15c893e74329b708ca9",
+                "X-Signature": "fbc88e3f205ba0c447a784ac1b726116e0432fa43e834d7a53ffc8667d996b2c"
+            }
+        }
+    ]
+}

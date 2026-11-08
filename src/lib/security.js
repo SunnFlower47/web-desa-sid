@@ -1,7 +1,12 @@
 /**
  * Security & Data Privacy Utilities
  * Sistem Informasi Desa Cibatu - Frontend Web Warga
+ * Implementasi Protokol CIBATU-PROXY-V2
  */
+
+import crypto from 'crypto';
+
+export const PROTOCOL_VERSION = 'CIBATU-PROXY-V2';
 
 /**
  * Validasi fail-closed kunci rahasia server
@@ -35,26 +40,27 @@ export function validateSecretKey(key, name) {
 }
 
 /**
- * Mendapatkan PROXY_KEY dengan validasi fail-closed
- * @returns {{ key: string|null, error: string|null }}
+ * Mendapatkan PROXY_SIGNING_KEY dengan validasi fail-closed (Protokol V2)
+ * @returns {{ key: string|null, keyId: string, error: string|null }}
  */
-export function getValidatedProxyKey() {
+export function getValidatedSigningKey() {
   // Fail-closed jika developer mencoba menggunakan prefiks NEXT_PUBLIC_
-  if (process.env.NEXT_PUBLIC_PROXY_KEY) {
-    const errMsg = 'Pelanggaran Keamanan: Ditemukan NEXT_PUBLIC_PROXY_KEY. Kunci proxy dilarang diekspos ke klien.';
+  if (process.env.NEXT_PUBLIC_PROXY_SIGNING_KEY || process.env.NEXT_PUBLIC_PROXY_KEY) {
+    const errMsg = 'Pelanggaran Keamanan: Ditemukan NEXT_PUBLIC_PROXY_SIGNING_KEY / NEXT_PUBLIC_PROXY_KEY. Kunci rahasia signing dilarang diekspos ke klien.';
     console.error(`[Security Fail-Closed] ${errMsg}`);
-    return { key: null, error: errMsg };
+    return { key: null, keyId: '', error: errMsg };
   }
 
-  const key = process.env.PROXY_KEY || process.env.NEXT_PROXY_KEY;
-  const validation = validateSecretKey(key, 'PROXY_KEY');
+  const key = process.env.PROXY_SIGNING_KEY;
+  const validation = validateSecretKey(key, 'PROXY_SIGNING_KEY');
 
   if (!validation.valid) {
     console.error(`[Security Fail-Closed] ${validation.error}`);
-    return { key: null, error: validation.error };
+    return { key: null, keyId: '', error: validation.error };
   }
 
-  return { key: key.trim(), error: null };
+  const keyId = process.env.PROXY_KEY_ID || 'cibatu-proxy-v2-primary';
+  return { key: key.trim(), keyId: keyId.trim(), error: null };
 }
 
 /**
@@ -77,6 +83,117 @@ export function getValidatedStorageKey() {
   }
 
   return { key: key.trim(), error: null };
+}
+
+/**
+ * Encode string sesuai standar RFC 3986 (menyamakan rawurlencode di PHP)
+ * Karakter !'()* di-encode ke bentuk hex uppercase
+ * @param {string} str
+ * @returns {string}
+ */
+export function rfc3986Encode(str) {
+  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+}
+
+/**
+ * Susun query string kanonik: parameter diurutkan berdasar key, di-encode RFC 3986
+ * @param {Record<string, any>|URLSearchParams|string|null|undefined} query
+ * @returns {string}
+ */
+export function buildCanonicalQuery(query) {
+  if (!query) return '';
+
+  let entries = [];
+  if (query instanceof URLSearchParams) {
+    for (const [key, val] of query.entries()) {
+      entries.push([key, val]);
+    }
+  } else if (typeof query === 'string') {
+    const parsed = new URLSearchParams(query);
+    for (const [key, val] of parsed.entries()) {
+      entries.push([key, val]);
+    }
+  } else if (typeof query === 'object') {
+    for (const [key, val] of Object.entries(query)) {
+      if (Array.isArray(val)) {
+        const sortedArray = [...val].sort();
+        for (const item of sortedArray) {
+          entries.push([key, item]);
+        }
+      } else {
+        entries.push([key, val]);
+      }
+    }
+  }
+
+  if (entries.length === 0) return '';
+
+  // Urutkan key secara leksikografis (byte order), jika key sama urutkan berdasar value
+  entries.sort((a, b) => {
+    if (a[0] === b[0]) {
+      return String(a[1]).localeCompare(String(b[1]));
+    }
+    return String(a[0]).localeCompare(String(b[0]));
+  });
+
+  return entries
+    .map(([key, value]) => `${rfc3986Encode(String(key))}=${rfc3986Encode(String(value))}`)
+    .join('&');
+}
+
+/**
+ * Hitung hash SHA-256 dari raw body string (hex lowercase)
+ * Jika body null/kosong, kembalikan hash dari string kosong
+ * @param {string|null|undefined} body
+ * @returns {string}
+ */
+export function hashBody(body) {
+  return crypto.createHash('sha256').update(body || '').digest('hex');
+}
+
+/**
+ * Susun string kanonik CIBATU-PROXY-V2
+ * @param {string} method
+ * @param {string} path
+ * @param {string} canonicalQuery
+ * @param {string|number} timestamp
+ * @param {string} nonce
+ * @param {string} clientIp
+ * @param {string} bodySha256
+ * @returns {string}
+ */
+export function buildCanonicalString(method, path, canonicalQuery, timestamp, nonce, clientIp, bodySha256) {
+  const normMethod = (method || '').trim().toUpperCase();
+  const normPath = '/' + (path || '').trim().replace(/^\/+/, '');
+
+  return [
+    PROTOCOL_VERSION,
+    normMethod,
+    normPath,
+    canonicalQuery || '',
+    String(timestamp).trim(),
+    (nonce || '').trim(),
+    (clientIp || '').trim(),
+    (bodySha256 || '').trim().toLowerCase()
+  ].join('\n');
+}
+
+/**
+ * Hitung HMAC-SHA256 signature
+ * @param {string} canonicalString
+ * @param {string} secretKey
+ * @returns {string}
+ */
+export function calculateSignature(canonicalString, secretKey) {
+  return crypto.createHmac('sha256', secretKey).update(canonicalString).digest('hex');
+}
+
+/**
+ * Buat nonce kriptografis acak minimal 16 bytes format Base64URL
+ * @returns {string}
+ */
+export function generateNonce() {
+  return crypto.randomBytes(16).toString('base64url');
 }
 
 /**
@@ -117,7 +234,7 @@ export const ALLOWED_PROXY_ROUTES = [
   { method: 'GET', pattern: /^master-wilayah$/ },
   { method: 'POST', pattern: /^search-penduduk$/ },
   { method: 'POST', pattern: /^surat-pengajuan$/ },
-  { method: 'GET', pattern: /^surat-status$/ },
+  { method: 'POST', pattern: /^surat-status$/ }, // Migrasi ke POST + CAPTCHA
   { method: 'POST', pattern: /^surat-history$/ },
 
   // Layanan Warga: Pengaduan
@@ -236,6 +353,5 @@ export function validateStoragePath(storagePath) {
  */
 export function redactNik(text) {
   if (!text || typeof text !== 'string') return '';
-  // Redaksi 16 digit NIK dengan menyisakan 4 digit pertama dan 4 digit terakhir: 3202********1234
   return text.replace(/\b(\d{4})\d{8}(\d{4})\b/g, '$1********$2');
 }

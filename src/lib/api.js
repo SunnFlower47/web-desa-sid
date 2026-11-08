@@ -119,13 +119,8 @@ export const getPublicDesaInfo = async () => {
 };
 
 /**
- * Cek status pengajuan surat spesifik berdasarkan NIK dan Nomor Resi/Surat
- * CATATAN ARSITEKTUR LINTAS REPO:
- * Saat ini backend Laravel melayani endpoint ini via GET /api/v1/surat-status dengan query params.
- * Karena query string berisiko tercatat di access log web server, backend Laravel sedang
- * direncanakan untuk mendukung POST /api/v1/surat-status.
- * Ketika backend Laravel telah siap menerima POST, pengembang CUKUP mengubah pemanggilan
- * di dalam fungsi ini (satu tempat terpusat) dari api.get menjadi api.post.
+ * Cek status pengajuan surat spesifik berdasarkan NIK dan Nomor Resi/Surat (POST)
+ * Mengirimkan data melalui body JSON (mencegah pencatatan NIK di URL web server access log).
  *
  * @param {Object} params
  * @param {string} params.nik NIK pemohon
@@ -133,11 +128,9 @@ export const getPublicDesaInfo = async () => {
  * @returns {Promise<any>}
  */
 export const checkSuratStatus = async ({ nik, nomorSurat }) => {
-  return await api.get('/surat-status', {
-    params: {
-      nik,
-      nomor_surat: nomorSurat,
-    },
+  return await api.post('/surat-status', {
+    nik,
+    nomor_surat: nomorSurat,
   });
 };
 

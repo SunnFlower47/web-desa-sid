@@ -1,53 +1,91 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   validateSecretKey,
-  getValidatedProxyKey,
+  getValidatedSigningKey,
   getValidatedStorageKey,
   validateProxyRoute,
   validateStoragePath,
   redactNik,
+  rfc3986Encode,
+  buildCanonicalQuery,
+  hashBody,
+  buildCanonicalString,
+  calculateSignature,
+  generateNonce,
   ALLOWED_PROXY_ROUTES,
 } from '../src/lib/security.js';
 
 // ==========================================
-// 1. PENGUJIAN FAIL-CLOSED KUNCI RAHASIA
+// 1. PENGUJIAN FAIL-CLOSED KUNCI RAHASIA V2
 // ==========================================
 test('Security: validateSecretKey menolak kunci kosong atau undefined', () => {
-  assert.equal(validateSecretKey('', 'PROXY_KEY').valid, false);
-  assert.equal(validateSecretKey(undefined, 'PROXY_KEY').valid, false);
-  assert.equal(validateSecretKey('   ', 'PROXY_KEY').valid, false);
-  assert.match(validateSecretKey('', 'PROXY_KEY').error, /belum dikonfigurasi/);
+  assert.equal(validateSecretKey('', 'PROXY_SIGNING_KEY').valid, false);
+  assert.equal(validateSecretKey(undefined, 'PROXY_SIGNING_KEY').valid, false);
+  assert.equal(validateSecretKey('   ', 'PROXY_SIGNING_KEY').valid, false);
+  assert.match(validateSecretKey('', 'PROXY_SIGNING_KEY').error, /belum dikonfigurasi/);
 });
 
 test('Security: validateSecretKey menolak kunci berprefiks NEXT_PUBLIC_', () => {
-  const result = validateSecretKey('abcdef1234567890abcdef1234567890', 'NEXT_PUBLIC_PROXY_KEY');
+  const result = validateSecretKey('abcdef1234567890abcdef1234567890', 'NEXT_PUBLIC_PROXY_SIGNING_KEY');
   assert.equal(result.valid, false);
   assert.match(result.error, /tidak boleh menggunakan prefiks NEXT_PUBLIC_/);
 });
 
 test('Security: validateSecretKey menolak kunci yang terlalu pendek (< 32 karakter)', () => {
   const shortKey = 'short-secret-key-12345';
-  const result = validateSecretKey(shortKey, 'PROXY_KEY');
+  const result = validateSecretKey(shortKey, 'PROXY_SIGNING_KEY');
   assert.equal(result.valid, false);
   assert.match(result.error, /terlalu lemah/);
 });
 
 test('Security: validateSecretKey menerima kunci server valid (>= 32 karakter)', () => {
   const strongKey = 'cibatu_production_strong_secret_key_2026_secure_32';
-  const result = validateSecretKey(strongKey, 'PROXY_KEY');
+  const result = validateSecretKey(strongKey, 'PROXY_SIGNING_KEY');
   assert.equal(result.valid, true);
   assert.equal(result.error, undefined);
 });
 
-test('Security: getValidatedProxyKey fail-closed saat NEXT_PUBLIC_PROXY_KEY terpasang di env', () => {
+test('Security: getValidatedSigningKey fail-closed saat NEXT_PUBLIC_ terpasang di env', () => {
   const originalEnv = { ...process.env };
   try {
-    process.env.NEXT_PUBLIC_PROXY_KEY = 'leak_candidate_key_12345678901234567890';
-    process.env.PROXY_KEY = 'valid_server_secret_key_12345678901234567890';
-    const result = getValidatedProxyKey();
+    process.env.NEXT_PUBLIC_PROXY_SIGNING_KEY = 'leak_candidate_key_12345678901234567890';
+    process.env.PROXY_SIGNING_KEY = 'valid_server_secret_key_12345678901234567890';
+    const result = getValidatedSigningKey();
     assert.equal(result.key, null);
     assert.match(result.error, /Pelanggaran Keamanan/);
+  } finally {
+    process.env = originalEnv;
+  }
+});
+
+test('Security: getValidatedSigningKey fail-closed saat kunci kosong atau terlalu pendek', () => {
+  const originalEnv = { ...process.env };
+  try {
+    delete process.env.NEXT_PUBLIC_PROXY_SIGNING_KEY;
+    delete process.env.NEXT_PUBLIC_PROXY_KEY;
+    
+    // Kasus kosong
+    process.env.PROXY_SIGNING_KEY = '';
+    let result = getValidatedSigningKey();
+    assert.equal(result.key, null);
+    assert.match(result.error, /belum dikonfigurasi/);
+
+    // Kasus < 32 bytes
+    process.env.PROXY_SIGNING_KEY = 'terlalu-pendek-123';
+    result = getValidatedSigningKey();
+    assert.equal(result.key, null);
+    assert.match(result.error, /terlalu lemah/);
+
+    // Kasus valid >= 32 bytes
+    process.env.PROXY_SIGNING_KEY = 'valid-super-secure-proxy-signing-key-32-chars-min';
+    process.env.PROXY_KEY_ID = 'test-key-v2';
+    result = getValidatedSigningKey();
+    assert.equal(result.key, 'valid-super-secure-proxy-signing-key-32-chars-min');
+    assert.equal(result.keyId, 'test-key-v2');
+    assert.equal(result.error, null);
   } finally {
     process.env = originalEnv;
   }
@@ -74,7 +112,7 @@ test('Security: validateProxyRoute mengizinkan rute sah yang terdaftar dalam all
   assert.equal(validateProxyRoute('GET', 'surat-types').allowed, true);
   assert.equal(validateProxyRoute('POST', 'search-penduduk').allowed, true);
   assert.equal(validateProxyRoute('POST', 'surat-pengajuan').allowed, true);
-  assert.equal(validateProxyRoute('GET', 'surat-status').allowed, true);
+  assert.equal(validateProxyRoute('POST', 'surat-status').allowed, true); // Wajib POST
   assert.equal(validateProxyRoute('POST', 'surat-history').allowed, true);
   assert.equal(validateProxyRoute('POST', 'pengaduan/submit').allowed, true);
 });
@@ -90,24 +128,18 @@ test('Security: validateProxyRoute menolak rute di luar allowlist dengan 404/ROU
   assert.equal(validateProxyRoute('GET', 'surat-pengajuan').allowed, false);
   assert.equal(validateProxyRoute('GET', 'surat-pengajuan').reason, 'ROUTE_NOT_IN_ALLOWLIST');
 
-  // Method salah (surat-status saat ini GET, bukan POST)
-  assert.equal(validateProxyRoute('DELETE', 'surat-status').allowed, false);
+  // Method lama surat-status (GET) ditolak
+  assert.equal(validateProxyRoute('GET', 'surat-status').allowed, false);
+  assert.equal(validateProxyRoute('GET', 'surat-status').reason, 'ROUTE_NOT_IN_ALLOWLIST');
 });
 
 test('Security: validateProxyRoute mendeteksi dan menolak upaya Path Traversal (400)', () => {
-  // Traversal bertitik
   assert.equal(validateProxyRoute('GET', '../admin').reason, 'PATH_TRAVERSAL_DETECTED');
   assert.equal(validateProxyRoute('GET', 'berita/../../admin').reason, 'PATH_TRAVERSAL_DETECTED');
-  
-  // Double slash dan backslash
   assert.equal(validateProxyRoute('GET', 'berita//kegiatan').reason, 'PATH_TRAVERSAL_DETECTED');
   assert.equal(validateProxyRoute('GET', 'berita\\kegiatan').reason, 'PATH_TRAVERSAL_DETECTED');
-
-  // URL encoded traversal
   assert.equal(validateProxyRoute('GET', '%2e%2e/admin').reason, 'PATH_TRAVERSAL_DETECTED');
   assert.equal(validateProxyRoute('GET', '%252e%252e/admin').reason, 'PATH_TRAVERSAL_DETECTED');
-
-  // Null byte injection
   assert.equal(validateProxyRoute('GET', 'berita\0.php').reason, 'PATH_TRAVERSAL_DETECTED');
 });
 
@@ -125,17 +157,10 @@ test('Security: validateStoragePath mengizinkan aset publik yang sah', () => {
 });
 
 test('Security: validateStoragePath menolak keras akses ke direktori privat warga', () => {
-  // Berkas permohonan surat warga (privat)
   assert.equal(validateStoragePath('surat-balasan/surat_keterangan_3202.pdf').allowed, false);
   assert.equal(validateStoragePath('surat-balasan/surat_keterangan_3202.pdf').reason, 'STORAGE_PREFIX_NOT_ALLOWED');
-
-  // Dokumen mutasi kependudukan (privat)
   assert.equal(validateStoragePath('mutasi-documents/surat_pindah.pdf').allowed, false);
-
-  // Lampiran pengaduan warga (privat)
   assert.equal(validateStoragePath('pengaduan/bukti_laporan.jpg').allowed, false);
-
-  // File identitas KTP/KK
   assert.equal(validateStoragePath('ktp/ktp_warga.jpg').allowed, false);
   assert.equal(validateStoragePath('kk/kartu_keluarga.pdf').allowed, false);
 });
@@ -166,4 +191,52 @@ test('Privacy: redactNik menangani input null, undefined, atau string kosong den
   assert.equal(redactNik(null), '');
   assert.equal(redactNik(undefined), '');
   assert.equal(redactNik(''), '');
+});
+
+// ==========================================
+// 5. PENGUJIAN PROTOKOL CIBATU-PROXY-V2 DENGAN TEST VECTORS RESMI
+// ==========================================
+test('Proxy V2: generateNonce menghasilkan token acak Base64URL >= 22 karakter', () => {
+  const nonce = generateNonce();
+  assert.equal(typeof nonce, 'string');
+  assert.ok(nonce.length >= 22, `Panjang nonce ${nonce.length} harus >= 22 karakter`);
+  assert.match(nonce, /^[A-Za-z0-9_-]+$/);
+});
+
+test('Proxy V2: Membuktikan output signature generator identik 100% dengan docs/proxy-signature-test-vectors.json', () => {
+  const vectorFilePath = path.join(process.cwd(), 'docs/proxy-signature-test-vectors.json');
+  assert.ok(fs.existsSync(vectorFilePath), 'File docs/proxy-signature-test-vectors.json wajib ada');
+
+  const vectorData = JSON.parse(fs.readFileSync(vectorFilePath, 'utf8'));
+  assert.equal(vectorData.version, 'CIBATU-PROXY-V2');
+
+  const { test_key_id, test_secret_key, timestamp, nonce, client_ip, cases } = vectorData;
+
+  for (const c of cases) {
+    const { case_id, request, canonical, expected_headers } = c;
+
+    // 1. Verifikasi Canonical Query
+    const calculatedQuery = buildCanonicalQuery(request.query);
+    assert.equal(calculatedQuery, canonical.canonical_query, `Canonical Query mismatch pada ${case_id}`);
+
+    // 2. Verifikasi Body SHA-256
+    const calculatedBodyHash = hashBody(request.body);
+    assert.equal(calculatedBodyHash, canonical.body_sha256, `Body SHA-256 mismatch pada ${case_id}`);
+
+    // 3. Verifikasi Canonical String
+    const calculatedCanonicalString = buildCanonicalString(
+      request.method,
+      request.path,
+      calculatedQuery,
+      timestamp,
+      nonce,
+      client_ip,
+      calculatedBodyHash
+    );
+    assert.equal(calculatedCanonicalString, canonical.canonical_string, `Canonical String mismatch pada ${case_id}`);
+
+    // 4. Verifikasi Signature HMAC-SHA256
+    const calculatedSignature = calculateSignature(calculatedCanonicalString, test_secret_key);
+    assert.equal(calculatedSignature, expected_headers['X-Signature'], `Signature HMAC-SHA256 mismatch pada ${case_id}`);
+  }
 });
