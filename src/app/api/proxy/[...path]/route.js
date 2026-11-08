@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { getTenantFromHost } from '@/lib/server-api';
+import { getValidatedProxyKey } from '@/lib/security';
 
 
 export async function GET(request, { params }) {
@@ -23,7 +24,14 @@ async function handleRequest(method, request, paramsPromise) {
   // Ambil Config dari .env
   let baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
   baseUrl = baseUrl.replace(/\/$/, "");
-  const proxyKey = process.env.PROXY_KEY || process.env.NEXT_PROXY_KEY || process.env.NEXT_PUBLIC_PROXY_KEY;
+  // Fail-closed validation untuk proxy key (tanpa fallback NEXT_PUBLIC_)
+  const { key: proxyKey, error: keyError } = getValidatedProxyKey();
+  if (!proxyKey) {
+    return NextResponse.json({
+      success: false,
+      message: 'Layanan proxy internal mengalami kendala konfigurasi server.'
+    }, { status: 500 });
+  }
 
   // --- SECURITY LAYER: Mencegah Akses Langsung ---
   const fetchSite = request.headers.get('sec-fetch-site');

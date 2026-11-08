@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { getValidatedStorageKey } from '@/lib/security';
 
 export async function GET(request, { params: paramsPromise }) {
   try {
-    // WAJIB di-await Sam di Next.js versi terbaru
     const params = await paramsPromise;
     const pathSegments = params.path || [];
     const storagePath = pathSegments.join('/');
@@ -12,19 +11,20 @@ export async function GET(request, { params: paramsPromise }) {
       return new NextResponse('Path not specified', { status: 400 });
     }
 
+    // Fail-closed validation untuk storage secret key
+    const { key: secretKey, error: keyError } = getValidatedStorageKey();
+    if (!secretKey) {
+      return NextResponse.json({
+        success: false,
+        message: 'Layanan penyimpanan berkas mengalami kendala konfigurasi server.'
+      }, { status: 500 });
+    }
+
     const baseUrl = process.env.INTERNAL_API_URL || 'https://api-vilage.sunnflower.site';
     const backendUrl = baseUrl.replace(/\/$/, "");
-    const secretKey = process.env.BACKEND_SECRET_KEY || 'CibatuVibeCoding2026';
     
     // Pastikan ini langsung ke domain backend, bukan jalur API
     const targetUrl = `${backendUrl.replace(/\/api\/v1\/?$/, '')}/storage/${storagePath}`;
-
-    // Buat Signature
-    const timestamp = Date.now().toString();
-    const signature = crypto
-      .createHmac('sha256', secretKey)
-      .update(timestamp)
-      .digest('hex');
 
     const response = await fetch(targetUrl, {
       headers: {
