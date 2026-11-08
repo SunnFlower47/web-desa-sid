@@ -57,11 +57,17 @@ api.interceptors.request.use(async (config) => {
   return config;
 }, (error) => Promise.reject(error));
 
-// Interceptor untuk menangani error secara global
+// Interceptor untuk menangani error secara global dengan redaksi data sensitif (PII)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data || error.message);
+    const status = error.response?.status;
+    const rawMsg = error.response?.data?.message || error.message || 'API Request Failed';
+    // Redaksi jika pesan error memuat 16 digit NIK
+    const sanitizedMsg = typeof rawMsg === 'string'
+      ? rawMsg.replace(/\b(\d{4})\d{8}(\d{4})\b/g, '$1********$2')
+      : 'API Request Failed';
+    console.error(`[API Error ${status || 'Network'}]:`, sanitizedMsg);
     return Promise.reject(error);
   }
 );

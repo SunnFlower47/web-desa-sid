@@ -52,3 +52,14 @@
 - Dampak/risiko: Jika halaman di-refresh, pengguna perlu memasukkan kembali NIK dan tanggal lahir demi keamanan data pribadi.
 - Rollback: `git revert HEAD`
 - Tindakan manual: Tidak ada.
+
+---
+
+## [12:30] fix — Redaksi NIK pada error logging dan pembersihan payload sensitif di console
+- Ringkasan: Mencegah kebocoran data warga melalui log peramban dan server: menambahkan sanitasi ekspresi reguler NIK 16 digit pada interceptor response axios (`src/lib/api.js`), membatasi log ke HTTP status dan pesan tersensor tanpa mengekspos response body warga, serta memastikan Route Handler proxy tidak lagi membocorkan URL/query string/body payload warga.
+- File: `src/lib/api.js`, `src/app/api/proxy/[...path]/route.js`
+- Commit: `<hash>`
+- Test: `npm run build` (success 18/18 routes)
+- Dampak/risiko: Error logging menjadi bersih dan mematuhi kepatuhan perlindungan data pribadi tanpa mempengaruhi fungsionalitas UI.
+- Rollback: `git revert HEAD`
+- Tindakan manual: Tidak ada.
