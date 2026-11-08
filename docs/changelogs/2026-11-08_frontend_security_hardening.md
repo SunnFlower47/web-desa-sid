@@ -91,7 +91,7 @@
 ## [12:45] test — Penambahan suite pengujian otomatis untuk allowlist proxy, fail-closed kunci, dan redaksi NIK
 - Ringkasan: Menambahkan unit test otomatis komprehensif (`scripts/test-security.mjs`) menggunakan Node.js built-in test runner (`node:test`). Suite menguji 14 skenario kritis: penolakan kunci kosong/lemah/NEXT_PUBLIC_, validasi fail-closed, pencocokan seluruh rute allowlist proxy, penolakan path traversal (bertitik, double slash, backslash, url-encoded, null byte) dengan status 400, pembatasan direktori privat storage dengan status 404, serta verifikasi fungsi redaksi ekspresi reguler NIK 16 digit. Menambahkan perintah `npm test` pada `package.json`.
 - File: `scripts/test-security.mjs`, `package.json`
-- Commit: `<hash>`
+- Commit: `f6becbb`
 - Test: `npm test` (14 passed, 0 failed, 66ms), `npm run build` (success 18/18 routes)
 - Dampak/risiko: Menyediakan quality gate otomatis yang dapat dijalankan pada CI/CD untuk mencegah regresi keamanan.
 - Rollback: `git revert HEAD`
