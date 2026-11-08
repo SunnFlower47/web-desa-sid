@@ -36,7 +36,7 @@
 ## [12:20] fix — Pembatasan storage proxy ke allowlist prefix publik dan penolakan traversal
 - Ringkasan: Menerapkan validasi ketat pada route handler `/api/storage/[...path]` menggunakan `validateStoragePath()`. Hanya mengizinkan berkas publik dengan prefix resmi (`berita/`, `fasilitas-desa/`, `struktur-desa/`, `umkms/`, `logos/`, `profil-desa/`, `kontak-desa/`). Menolak tegas path traversal dengan HTTP 400 dan memblokir akses ke direktori privat (surat permohonan, mutasi, KTP/KK, pengaduan) dengan HTTP 404.
 - File: `src/app/api/storage/[...path]/route.js`
-- Commit: `<hash>`
+- Commit: `e586fc4`
 - Test: `npm run build` (success 18/18 routes)
 - Dampak/risiko: File di luar prefix publik tidak dapat diakses melalui endpoint proxy storage.
 - Rollback: `git revert HEAD`
