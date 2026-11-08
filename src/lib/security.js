@@ -80,6 +80,156 @@ export function getValidatedStorageKey() {
 }
 
 /**
+ * Allowlist resmi endpoint API yang diizinkan diakses melalui Next.js Proxy
+ * Format: { method: 'GET'|'POST', pattern: RegExp }
+ */
+export const ALLOWED_PROXY_ROUTES = [
+  // Berita
+  { method: 'GET', pattern: /^berita$/ },
+  { method: 'GET', pattern: /^berita\/[a-zA-Z0-9_-]+$/ },
+  { method: 'GET', pattern: /^berita-latest$/ },
+  { method: 'GET', pattern: /^berita-eksternal$/ },
+  { method: 'GET', pattern: /^berita-categories$/ },
+
+  // Profil & Informasi Desa
+  { method: 'GET', pattern: /^desa-info$/ },
+  { method: 'GET', pattern: /^public-statistics\/info-desa$/ },
+  { method: 'GET', pattern: /^kontak-desa$/ },
+  { method: 'GET', pattern: /^contact\/info$/ },
+  { method: 'POST', pattern: /^contact\/submit$/ },
+  { method: 'GET', pattern: /^statistics$/ },
+  { method: 'GET', pattern: /^struktur-desa$/ },
+  { method: 'GET', pattern: /^perangkat-desa$/ },
+  { method: 'GET', pattern: /^fasilitas-desa$/ },
+  { method: 'GET', pattern: /^umkm$/ },
+  { method: 'GET', pattern: /^geojson$/ },
+
+  // Transparansi Keuangan & Pembangunan
+  { method: 'GET', pattern: /^apbdes$/ },
+  { method: 'GET', pattern: /^proyek-pembangunan$/ },
+  { method: 'GET', pattern: /^bantuan-sosial-transparansi$/ },
+
+  // Layanan Warga: Bantuan Sosial
+  { method: 'POST', pattern: /^bantuan-sosial\/check$/ },
+
+  // Layanan Warga: Surat
+  { method: 'GET', pattern: /^surat-types$/ },
+  { method: 'GET', pattern: /^master-wilayah$/ },
+  { method: 'POST', pattern: /^search-penduduk$/ },
+  { method: 'POST', pattern: /^surat-pengajuan$/ },
+  { method: 'GET', pattern: /^surat-status$/ },
+  { method: 'POST', pattern: /^surat-history$/ },
+
+  // Layanan Warga: Pengaduan
+  { method: 'POST', pattern: /^pengaduan\/submit$/ },
+
+  // Testimoni & AI Chat
+  { method: 'GET', pattern: /^testimoni$/ },
+  { method: 'POST', pattern: /^testimoni$/ },
+  { method: 'POST', pattern: /^chat$/ },
+];
+
+/**
+ * Validasi apakah path dan method request termasuk dalam allowlist yang sah
+ * serta bebas dari upaya path traversal.
+ * @param {string} method HTTP Method (GET, POST, dll)
+ * @param {string} path Path relatif (misal: 'berita/kegiatan-desa')
+ * @returns {{ allowed: boolean, reason?: string }}
+ */
+export function validateProxyRoute(method, path) {
+  if (!path || typeof path !== 'string') {
+    return { allowed: false, reason: 'INVALID_PATH' };
+  }
+
+  // Deteksi karakter null byte dan encoded traversal
+  if (path.includes('\0') || path.includes('%00') || path.includes('%252e')) {
+    return { allowed: false, reason: 'PATH_TRAVERSAL_DETECTED' };
+  }
+
+  // Deteksi dan tolak Path Traversal & karakter mencurigakan
+  let decodedPath = path;
+  try {
+    decodedPath = decodeURIComponent(path).toLowerCase();
+  } catch (e) {
+    return { allowed: false, reason: 'PATH_TRAVERSAL_DETECTED' };
+  }
+
+  if (
+    decodedPath.includes('..') ||
+    decodedPath.includes('//') ||
+    decodedPath.includes('\\') ||
+    path.includes('%2e%2e') ||
+    path.includes('%2f%2f') ||
+    path.startsWith('/')
+  ) {
+    return { allowed: false, reason: 'PATH_TRAVERSAL_DETECTED' };
+  }
+
+  const cleanMethod = (method || '').toUpperCase();
+  const isMatch = ALLOWED_PROXY_ROUTES.some((route) => {
+    return route.method === cleanMethod && route.pattern.test(path);
+  });
+
+  if (!isMatch) {
+    return { allowed: false, reason: 'ROUTE_NOT_IN_ALLOWLIST' };
+  }
+
+  return { allowed: true };
+}
+
+/**
+ * Validasi path penyimpanan berkas publik (mencegah path traversal dan akses direktori privat)
+ * @param {string} storagePath Path berkas (misal: 'berita/photos/banner.jpg')
+ * @returns {{ allowed: boolean, reason?: string }}
+ */
+export function validateStoragePath(storagePath) {
+  if (!storagePath || typeof storagePath !== 'string') {
+    return { allowed: false, reason: 'INVALID_STORAGE_PATH' };
+  }
+
+  if (storagePath.includes('\0') || storagePath.includes('%00') || storagePath.includes('%252e')) {
+    return { allowed: false, reason: 'PATH_TRAVERSAL_DETECTED' };
+  }
+
+  let decoded = storagePath;
+  try {
+    decoded = decodeURIComponent(storagePath).toLowerCase();
+  } catch (e) {
+    return { allowed: false, reason: 'PATH_TRAVERSAL_DETECTED' };
+  }
+
+  if (
+    decoded.includes('..') ||
+    decoded.includes('//') ||
+    decoded.includes('\\') ||
+    storagePath.includes('%2e%2e')
+  ) {
+    return { allowed: false, reason: 'PATH_TRAVERSAL_DETECTED' };
+  }
+
+  // Whitelist prefix direktori publik yang diizinkan dilayani
+  const ALLOWED_STORAGE_PREFIXES = [
+    'berita/',
+    'fasilitas-desa/',
+    'struktur-desa/',
+    'umkms/',
+    'umkm/',
+    'logos/',
+    'profil-desa/',
+    'kontak-desa/',
+  ];
+
+  const cleanPath = storagePath.replace(/^\/+/, '');
+  const isWhitelisted = ALLOWED_STORAGE_PREFIXES.some((prefix) => cleanPath.startsWith(prefix));
+
+  if (!isWhitelisted) {
+    return { allowed: false, reason: 'STORAGE_PREFIX_NOT_ALLOWED' };
+  }
+
+  return { allowed: true };
+}
+
+/**
  * Redaksi NIK (16 digit angka) dari string pesan error atau teks log
  * @param {string|null|undefined} text
  * @returns {string}
