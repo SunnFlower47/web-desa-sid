@@ -13,7 +13,7 @@
   - `scripts/test-security.mjs`
   - `eslint.config.mjs`
   - `docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md`
-- **Commit**: (akan dicatat setelah commit)
+- **Commit**: c8936d6
 - **Test**:
   - `npm test`: PASS (17 tests passed, 0 failed) membuktikan ke-4 test vectors identik 100% dan kunci fail-closed
   - `npm run lint`: PASS (0 errors, 36 warnings)
