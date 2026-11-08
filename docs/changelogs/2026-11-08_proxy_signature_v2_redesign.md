@@ -1,6 +1,6 @@
-# Changelog: 2026-11-08 — Proxy Signature V2 Redesign (Frontend Next.js)
+﻿# Changelog: 2026-11-08 â€” Proxy Signature V2 Redesign (Frontend Next.js)
 
-## [18:05] feat(security) — Implementasi Pengiriman Header Handshake Proxy Signature V2 & Migrasi POST Surat Status
+## [18:05] feat(security) â€” Implementasi Pengiriman Header Handshake Proxy Signature V2 & Migrasi POST Surat Status
 
 - **Ringkasan**: Menghapus seluruh dependensi pada kunci statis `PROXY_KEY` dan header `X-Proxy-App-Id` yang rentan terekspos ke sisi klien (temuan audit 4.1). Mengimplementasikan protokol `CIBATU-PROXY-V2` di Route Handler Next.js (`src/app/api/proxy/[...path]/route.js`) dengan kalkulasi canonical string, canonical query (RFC 3986), raw body SHA-256 hex, nonce anti-replay Base64URL, dan HMAC-SHA256 signature dari kunci rahasia server `PROXY_SIGNING_KEY` (fail-closed jika tidak ada atau <32 byte). Memigrasikan pemanggilan `checkSuratStatus` ke HTTP POST body JSON (mencegah pencatatan NIK di log query string). Menyinkronkan dan memverifikasi test vectors resmi 100% cocok.
 - **File**:
@@ -23,7 +23,7 @@
 - **Rollback**: `git revert <commit_hash>`
 - **Tindakan manual**: Pastikan `.env` atau environment server Next.js diisi `PROXY_SIGNING_KEY` (dan opsional `PROXY_KEY_ID`).
 
-## [19:15] fix & chore — Pemulihan Aturan Linting ESLint, Penanganan Hoisting & Unescaped Entities, Serta Verifikasi E2E
+## [19:15] fix & chore â€” Pemulihan Aturan Linting ESLint, Penanganan Hoisting & Unescaped Entities, Serta Verifikasi E2E
 - **Ringkasan**:
   1. Memulihkan aturan ESLint `react/no-unescaped-entities` dan `react-hooks/immutability` di `eslint.config.mjs` dengan memperbaiki kode akar penyebab masalah daripada membungkam lint.
   2. Memperbaiki hoisting function `fetchNews`, `fetchContacts`, dan `fetchSuratTypes` dengan membungkusnya dalam `useCallback` sebelum `useEffect`.
@@ -51,7 +51,7 @@
 - **Rollback**: `git checkout HEAD~1 <file>`
 - **Tindakan manual**: Tidak ada.
 
-## [20:45] security — Canonical Multipart Digest, Anti-Spoofing Client IP & Harmonisasi Konfigurasi V2
+## [20:45] security â€” Canonical Multipart Digest, Anti-Spoofing Client IP & Harmonisasi Konfigurasi V2
 - **Ringkasan**:
   1. **Canonical Multipart Digest Lintas-Runtime**:
      - Mengimplementasikan penghitungan `buildMultipartDigest` di `src/lib/security.js` dan Route Handler `src/app/api/proxy/[...path]/route.js`.
@@ -87,7 +87,7 @@
 - **Rollback**: `git checkout HEAD~1 <file>`
 - **Tindakan manual**: Pastikan `PROXY_KEY_ID=v1` di `.env` lokal/produksi.
 
-## [23:15] feat(security) — Final Round: Multipart Digest Multi-File & Array, Field Name Validation, Localhost E2E Restriction & 3-Foto
+## [23:15] feat(security) â€” Final Round: Multipart Digest Multi-File & Array, Field Name Validation, Localhost E2E Restriction & 3-Foto
 - **Ringkasan**:
   1. **Canonical Multipart Digest Multi-File & Array**:
      - Memperluas digest multipart kanonik di Route Handler Next.js (`src/app/api/proxy/[...path]/route.js`) dan library keamanan (`src/lib/security.js`) untuk mendukung form data dengan banyak file pada field yang sama (`foto[]`, `foto[0]`, dll.) dan field non-file berulang (`kategori[]`, `kategori[0]`).
@@ -126,7 +126,7 @@
 - File:
   - src/app/layanan/surat/page.jsx
   - docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md
-- Commit: PENDING_COMMIT
+- Commit: 4e6bf7a
 - Test: npm test (25 passed, 0 failed), npm run lint (0 errors)
 - Dampak/risiko: Rendah. Memperbaiki rendering awal daftar layanan jenis surat di /layanan/surat.
 - Rollback: git revert <commit_hash>
