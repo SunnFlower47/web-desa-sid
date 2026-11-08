@@ -126,6 +126,59 @@
                 "X-Body-Mode": "multipart",
                 "X-Signature": "00d0f2e422ffcaf30171567dd56293d2c06c26cbdc89b1066063a872db771ac5"
             }
+        },
+        {
+            "case_id": "case_5_post_multipart_multiple_files_and_arrays",
+            "description": "POST request multipart dengan beberapa file pada field yang sama (foto[]) dan field array non-file (kategori[])",
+            "request": {
+                "method": "POST",
+                "path": "/api/proxy/v1/pengaduan/submit",
+                "query": {},
+                "body_mode": "multipart",
+                "multipart_fields": {
+                    "judul": "Laporan Kerusakan Fasilitas",
+                    "kategori": [
+                        "infrastruktur",
+                        "fasilitas-umum"
+                    ],
+                    "lokasi": "Dusun Cibatu RT 01 RW 02"
+                },
+                "multipart_files": [
+                    {
+                        "field": "foto",
+                        "index": 0,
+                        "size": 100,
+                        "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+                    },
+                    {
+                        "field": "foto",
+                        "index": 1,
+                        "size": 200,
+                        "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+                    },
+                    {
+                        "field": "foto",
+                        "index": 2,
+                        "size": 300,
+                        "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+                    }
+                ]
+            },
+            "canonical": {
+                "canonical_query": "",
+                "body_sha256": "0495c8f2fb2531bf8bfa60016f138c88d6361fc36ae5bf637fc4a0fb5a50fa95",
+                "body_mode": "multipart",
+                "canonical_string": "CIBATU-PROXY-V2\nPOST\n/api/proxy/v1/pengaduan/submit\n\n1762600000\nnonce-random-base64url-token-12345\n203.0.113.50\n0495c8f2fb2531bf8bfa60016f138c88d6361fc36ae5bf637fc4a0fb5a50fa95\nmultipart"
+            },
+            "expected_headers": {
+                "X-Key-Id": "test-key-id-primary",
+                "X-Timestamp": "1762600000",
+                "X-Nonce": "nonce-random-base64url-token-12345",
+                "X-Client-Ip": "203.0.113.50",
+                "X-Content-Sha256": "0495c8f2fb2531bf8bfa60016f138c88d6361fc36ae5bf637fc4a0fb5a50fa95",
+                "X-Body-Mode": "multipart",
+                "X-Signature": "a1a423913d2d72812c8ce3c782dd2ea6facecf06ff7d3ad2e61544f503b9084f"
+            }
         }
     ]
 }

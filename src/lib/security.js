@@ -241,8 +241,18 @@ export function hashBody(body) {
 }
 
 /**
+ * Validasi nama field multipart (mencegah injeksi karakter kontrol, newline, colon, dot, dan spasi)
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isValidFieldName(name) {
+  if (!name || typeof name !== 'string') return false;
+  return /^[a-zA-Z0-9_-]+(?:\[[0-9]*\])?$/.test(name);
+}
+
+/**
  * Hitung Canonical Multipart Digest dari form fields dan file upload:
- * - Field non-file: hash nilai, urut nama ASCII
+ * - Field non-file: hash nilai (scalar atau per-indeks array), urut nama ASCII
  * - File: nama field, ukuran, SHA-256 isi, urut nama+indeks
  * Digabung dengan newline dan di-hash SHA-256
  * @param {Record<string, any>} fields
@@ -252,13 +262,20 @@ export function hashBody(body) {
 export function buildMultipartDigest(fields, files) {
   const lines = [];
 
-  // 1. Non-file fields: hash nilai, urut nama ASCII
+  // 1. Non-file fields: hash nilai (scalar atau per-indeks array), urut nama ASCII
   const sortedKeys = Object.keys(fields || {}).sort();
   for (const key of sortedKeys) {
     const val = fields[key];
-    const valStr = typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val);
-    const valHash = crypto.createHash('sha256').update(valStr).digest('hex');
-    lines.push(`field:${key}:${valHash}`);
+    if (Array.isArray(val) || (typeof val === 'object' && val !== null)) {
+      const indices = Object.keys(val).map(Number).sort((a, b) => a - b);
+      for (const vIdx of indices) {
+        const vHash = crypto.createHash('sha256').update(String(val[vIdx])).digest('hex');
+        lines.push(`field:${key}:${vIdx}:${vHash}`);
+      }
+    } else {
+      const valHash = crypto.createHash('sha256').update(String(val)).digest('hex');
+      lines.push(`field:${key}:${valHash}`);
+    }
   }
 
   // 2. Files: field name, index, size, sha256 of contents, sort by field asc then index asc

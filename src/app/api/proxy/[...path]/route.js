@@ -13,6 +13,7 @@ import {
   calculateSignature,
   generateNonce,
   extractClientIp,
+  isValidFieldName,
 } from '@/lib/security';
 
 export async function GET(request, { params }) {
@@ -119,26 +120,56 @@ async function handleRequest(method, request, paramsPromise) {
         const fileIndices = {};
 
         for (const [key, value] of parsedFd.entries()) {
+          // Validasi ketat nama field (tolak karakter kontrol, titik, spasi, kolon, newline)
+          if (!isValidFieldName(key)) {
+            console.warn(`[Proxy Security] Nama field multipart tidak valid: ${key}`);
+            return NextResponse.json({
+              success: false,
+              message: 'Akses Ditolak: Nama field payload tidak valid.'
+            }, { status: 400 });
+          }
+
+          const bracketMatch = key.match(/^([a-zA-Z0-9_-]+)(?:\[([0-9]*)\])?$/);
+          const baseName = bracketMatch ? bracketMatch[1] : key;
+          const bracketIndex = bracketMatch && bracketMatch[2] !== '' && bracketMatch[2] !== undefined
+            ? parseInt(bracketMatch[2], 10)
+            : null;
+
           if (value && typeof value === 'object' && typeof value.arrayBuffer === 'function') {
-            const cleanKey = key.replace(/\[\]$/, '');
-            const idx = fileIndices[cleanKey] || 0;
-            fileIndices[cleanKey] = idx + 1;
+            const idx = bracketIndex !== null
+              ? bracketIndex
+              : (fileIndices[baseName] || 0);
+            if (bracketIndex === null) {
+              fileIndices[baseName] = idx + 1;
+            }
             const fileBuf = Buffer.from(await value.arrayBuffer());
             const fileHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
             files.push({
-              field: cleanKey,
+              field: baseName,
               index: idx,
               size: value.size,
               sha256: fileHash,
             });
           } else {
-            if (fields[key] !== undefined) {
-              if (!Array.isArray(fields[key])) {
-                fields[key] = [fields[key]];
+            if (bracketIndex !== null) {
+              if (!fields[baseName] || !Array.isArray(fields[baseName])) {
+                fields[baseName] = [];
               }
-              fields[key].push(value);
+              fields[baseName][bracketIndex] = value;
+            } else if (key.endsWith('[]')) {
+              if (!fields[baseName]) {
+                fields[baseName] = [];
+              }
+              fields[baseName].push(value);
             } else {
-              fields[key] = value;
+              if (fields[baseName] !== undefined) {
+                if (!Array.isArray(fields[baseName])) {
+                  fields[baseName] = [fields[baseName]];
+                }
+                fields[baseName].push(value);
+              } else {
+                fields[baseName] = value;
+              }
             }
           }
         }

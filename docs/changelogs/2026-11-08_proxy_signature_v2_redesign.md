@@ -86,3 +86,37 @@
 - **Dampak/risiko**: Rendah.
 - **Rollback**: `git checkout HEAD~1 <file>`
 - **Tindakan manual**: Pastikan `PROXY_KEY_ID=v1` di `.env` lokal/produksi.
+
+## [23:15] feat(security) — Final Round: Multipart Digest Multi-File & Array, Field Name Validation, Localhost E2E Restriction & 3-Foto
+- **Ringkasan**:
+  1. **Canonical Multipart Digest Multi-File & Array**:
+     - Memperluas digest multipart kanonik di Route Handler Next.js (`src/app/api/proxy/[...path]/route.js`) dan library keamanan (`src/lib/security.js`) untuk mendukung form data dengan banyak file pada field yang sama (`foto[]`, `foto[0]`, dll.) dan field non-file berulang (`kategori[]`, `kategori[0]`).
+     - Menolak nama field yang memuat karakter kontrol, `\n`, `\r`, `:`, spasi, titik `.`, atau bracket bersarang dengan HTTP 400 Bad Request (`Akses Ditolak: Nama field payload tidak valid`).
+     - Menyinkronkan vektor uji resmi `case_5_post_multipart_multiple_files_and_arrays` ke `docs/proxy-signature-test-vectors.json`.
+     - Menegaskan bahwa client original filename dan client Content-Type diabaikan secara total dari digest untuk memastikan kompatibilitas dan keamanan terhadap path traversal / spoofing.
+  2. **Pembatasan Host Lokal Skrip E2E**:
+     - Menambahkan validasi URL host pada `scripts/e2e-verification.mjs` sehingga hanya mau berjalan terhadap host lokal (`localhost`, `127.0.0.1`, `::1`) dan menolak URL non-localhost secara fail-safe.
+     - Memperbarui pengujian pengaduan dengan mengirimkan **3 file foto** valid secara multipart ke backend.
+  3. **Quality Gate Penuh**:
+     - Unit test: 25 tests passed (termasuk validasi field name, collision resistance, untrusted metadata, case 5 test vector).
+     - Linting: 0 error.
+     - Production build: Sukses terkompilasi optimal (18/18 routes).
+     - Dependency audit: 0 vulnerabilities.
+- **File**:
+  - `src/lib/security.js`
+  - `src/app/api/proxy/[...path]/route.js`
+  - `docs/proxy-signature.md`
+  - `docs/proxy-signature-test-vectors.json`
+  - `scripts/test-security.mjs`
+  - `scripts/e2e-verification.mjs`
+  - `docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md`
+- **Commit**: 3025ee3
+- **Test**:
+  - `npm test`: PASS (25 passed, 0 failed)
+  - `npm run lint`: PASS (0 errors, 26 warnings)
+  - `npm run build`: PASS (terkompilasi 18/18 routes)
+  - `npm audit --omit=dev`: PASS (0 vulnerabilities)
+  - `node scripts/e2e-verification.mjs`: PASS (Semua 5 flow sukses 2xx)
+- **Dampak/risiko**: Rendah.
+- **Rollback**: `git checkout HEAD~1 <file>`
+- **Tindakan manual**: Tidak ada.

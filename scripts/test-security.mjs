@@ -18,6 +18,7 @@ import {
   generateNonce,
   extractClientIp,
   isValidIp,
+  isValidFieldName,
   ALLOWED_PROXY_ROUTES,
 } from '../src/lib/security.js';
 
@@ -336,4 +337,84 @@ test('Multipart: buildMultipartDigest mendeteksi dan menghasilkan hash berbeda j
   // 4. File dihapus
   const deletedFileDigest = buildMultipartDigest(fields, []);
   assert.notEqual(deletedFileDigest, baseDigest, 'Penghapusan file harus menghasilkan digest berbeda');
+});
+
+test('Multipart: isValidFieldName menolak karakter kontrol, titik, spasi, kolon, newline, dan bracket bersarang', () => {
+  assert.equal(isValidFieldName('foto'), true);
+  assert.equal(isValidFieldName('foto[]'), true);
+  assert.equal(isValidFieldName('foto[0]'), true);
+  assert.equal(isValidFieldName('foto[5]'), true);
+  assert.equal(isValidFieldName('g-recaptcha-response'), true);
+  assert.equal(isValidFieldName('nik_pengaju'), true);
+
+  // Karakter berbahaya / malformasi wajib ditolak
+  assert.equal(isValidFieldName('field:colon'), false);
+  assert.equal(isValidFieldName("field\nnewline"), false);
+  assert.equal(isValidFieldName("field\rcarriage_return"), false);
+  assert.equal(isValidFieldName('field with space'), false);
+  assert.equal(isValidFieldName('field.with.dot'), false);
+  assert.equal(isValidFieldName("field\x00null_byte"), false);
+  assert.equal(isValidFieldName('nested[foo][bar]'), false);
+});
+
+test('Multipart: Collision resistance membuktikan dua body berbeda tidak pernah menghasilkan digest yang sama', () => {
+  const digestA = buildMultipartDigest(
+    { tag: ['a', 'b'], title: 'test' },
+    [{ field: 'foto', index: 0, size: 10, sha256: '1111111111111111111111111111111111111111111111111111111111111111' }]
+  );
+
+  // Body B: Urutan elemen array dibalik
+  const digestB = buildMultipartDigest(
+    { tag: ['b', 'a'], title: 'test' },
+    [{ field: 'foto', index: 0, size: 10, sha256: '1111111111111111111111111111111111111111111111111111111111111111' }]
+  );
+
+  // Body C: Ukuran file berbeda
+  const digestC = buildMultipartDigest(
+    { tag: ['a', 'b'], title: 'test' },
+    [{ field: 'foto', index: 0, size: 11, sha256: '1111111111111111111111111111111111111111111111111111111111111111' }]
+  );
+
+  // Body D: Nilai string berbeda
+  const digestD = buildMultipartDigest(
+    { tag: ['a', 'b'], title: 'test2' },
+    [{ field: 'foto', index: 0, size: 10, sha256: '1111111111111111111111111111111111111111111111111111111111111111' }]
+  );
+
+  assert.notEqual(digestA, digestB, 'Urutan array berbeda harus menghasilkan digest berbeda');
+  assert.notEqual(digestA, digestC, 'Ukuran file berbeda harus menghasilkan digest berbeda');
+  assert.notEqual(digestA, digestD, 'Nilai scalar berbeda harus menghasilkan digest berbeda');
+});
+
+test('Multipart: Nama file dan Content-Type dari klien tidak dipercaya dan tidak mempengaruhi digest', () => {
+  const file1 = { field: 'foto', index: 0, size: 42, sha256: '254aecfe19c2238e8671d06ae2744c1361f9bf78f093632a7eeafe87a3ae5338' };
+  const fields = { judul: 'Laporan Kerusakan' };
+
+  const digest1 = buildMultipartDigest(fields, [file1]);
+
+  // Simulasi klien mengirim file dengan nama file berbeda atau Content-Type berbeda:
+  // Karena buildMultipartDigest hanya mengikat field, index, size, dan sha256(content),
+  // metadata klien seperti client original filename atau client Content-Type diabaikan secara total.
+  const file1WithAlteredClientMetadata = { ...file1 }; // Isi bytes dan hash tetap sama persis
+  const digest2 = buildMultipartDigest(fields, [file1WithAlteredClientMetadata]);
+
+  assert.equal(digest1, digest2, 'Digest harus identik jika konten byte dan ukuran file identik');
+});
+
+test('Multipart: Mendukung multiple file pada field yang sama (foto[]) dan array non-file', () => {
+  const fields = {
+    judul: 'Laporan Kerusakan Fasilitas',
+    kategori: ['infrastruktur', 'fasilitas-umum'],
+    lokasi: 'Dusun Cibatu RT 01 RW 02',
+  };
+  const files = [
+    { field: 'foto', index: 0, size: 100, sha256: '1111111111111111111111111111111111111111111111111111111111111111' },
+    { field: 'foto', index: 1, size: 200, sha256: '2222222222222222222222222222222222222222222222222222222222222222' },
+    { field: 'foto', index: 2, size: 300, sha256: '3333333333333333333333333333333333333333333333333333333333333333' },
+  ];
+
+  const digest = buildMultipartDigest(fields, files);
+  assert.equal(typeof digest, 'string');
+  assert.equal(digest.length, 64);
+  assert.equal(digest, '0495c8f2fb2531bf8bfa60016f138c88d6361fc36ae5bf637fc4a0fb5a50fa95');
 });

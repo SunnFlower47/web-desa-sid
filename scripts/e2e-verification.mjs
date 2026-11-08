@@ -1,6 +1,15 @@
 import crypto from 'node:crypto';
 
-const NEXT_BASE_URL = 'http://127.0.0.1:3030';
+const NEXT_BASE_URL = process.env.NEXT_BASE_URL || 'http://127.0.0.1:3030';
+
+// Pembatasan Keamanan Ketat: Hanya izinkan eksekusi terhadap host lokal
+const parsedUrl = new URL(NEXT_BASE_URL);
+const allowedHostnames = ['localhost', '127.0.0.1', '::1'];
+if (!allowedHostnames.includes(parsedUrl.hostname)) {
+  console.error(`\n[SECURITY REJECTION] Target host '${parsedUrl.hostname}' ditolak!`);
+  console.error(`Skrip e2e-verification.mjs hanya diizinkan berjalan terhadap host lokal (${allowedHostnames.join(', ')}).\n`);
+  process.exit(1);
+}
 
 function maskData(data) {
   if (typeof data === 'string') {
@@ -128,10 +137,11 @@ async function runE2ESuite() {
   formDataPengaduan.append('prioritas', 'sedang');
   formDataPengaduan.append('recaptcha_token', 'mock-captcha-valid-token');
 
-  // 1x1 valid PNG binary buffer agar lolos validasi getimagesize() di Laravel
+  // 1x1 valid PNG binary buffer agar lolos validasi getimagesize() di Laravel (3 berkas foto aduan)
   const validPngBuffer = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
-  const dummyPhoto = new Blob([validPngBuffer], { type: 'image/png' });
-  formDataPengaduan.append('foto[]', dummyPhoto, 'foto_jalan.png');
+  formDataPengaduan.append('foto[]', new Blob([validPngBuffer], { type: 'image/png' }), 'foto_jalan_1.png');
+  formDataPengaduan.append('foto[]', new Blob([validPngBuffer], { type: 'image/png' }), 'foto_jalan_2.png');
+  formDataPengaduan.append('foto[]', new Blob([validPngBuffer], { type: 'image/png' }), 'foto_jalan_3.png');
 
   const resPengaduan = await fetch(`${NEXT_BASE_URL}/api/proxy/pengaduan/submit`, {
     method: 'POST',

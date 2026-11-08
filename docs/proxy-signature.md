@@ -63,9 +63,16 @@ CIBATU-PROXY-V2\n
    - Mode `raw`: Hash SHA-256 dari *raw request payload*. Jika body kosong, gunakan hash dari string kosong:
      `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
    - Mode `multipart`: Dihitung melalui **Canonical Multipart Digest** lintas-runtime (FrankenPHP / PHP-FPM / CLI server):
-     - Field non-file: Format `field:{key}:{sha256(value)}`, diurutkan berdasarkan `key` ASCII ascending.
-     - File upload: Format `file:{field}:{index}:{size}:{sha256(file_content)}`, diurutkan berdasarkan `field` ascending lalu `index` ascending.
-     - Gabungkan setiap baris dengan `\n` dan hash hasilnya dengan SHA-256 menjadi string hex 64 karakter.
+     - **Validasi Ketat Nama Field**: Seluruh nama field (teks maupun berkas) wajib memenuhi pola `^[a-zA-Z0-9_-]+(?:\[[0-9]*\])?$`. Nama field yang memuat karakter kontrol, `\n`, `\r`, `:`, spasi, atau titik `.` langsung ditolak (HTTP 400 di Next.js, HTTP 401 di Laravel). Pelarangan titik dan spasi secara eksplisit mencegah anomali mutasi nama variabel PHP (PHP secara otomatis mengubah titik dan spasi menjadi `_`) serta mencegah celah *parameter pollution*.
+     - **Field Non-File**:
+       - Tipe scalar: `field:{key}:{sha256(value)}`
+       - Tipe array berulang (misal `kategori[]` atau `kategori[0]`): `field:{key}:{index}:{sha256(value)}`
+       - Diurutkan berdasarkan `key` ASCII ascending, lalu `index` numerik ascending.
+     - **File Upload** (mendukung beberapa file pada field yang sama, misal `foto[]` sampai 5 berkas):
+       - Format: `file:{field}:{index}:{size}:{sha256(file_content)}`
+       - Diurutkan berdasarkan `field` ASCII ascending, lalu `index` numerik ascending.
+       - **Nama File dan Content-Type Klien Tidak Dipercaya**: Nama file asli dan header `Content-Type` dari browser tidak pernah dimasukkan ke dalam perhitungan digest untuk mencegah injeksi path traversal atau header spoofing. Backend Laravel melakukan inspeksi biner nyata (`finfo` / `getimagesize()`) dan menyimpan berkas ke disk privat dengan nama UUID v4 acak murni (`Str::uuid()`).
+     - Gabungkan setiap baris dengan `\n` dan hash hasilnya dengan SHA-256 menjadi string hex 64 karakter lowercase.
 9. **Body Mode**: Huruf kecil `raw` atau `multipart`. Jika `Content-Type` diawali `multipart/form-data`, wajib bernilai `multipart` (mencegah *downgrade attack*).
 
 ### Perhitungan Signature:
