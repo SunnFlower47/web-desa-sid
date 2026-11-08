@@ -44,6 +44,25 @@ export default function LayananSurat() {
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const recaptchaRef = useRef(null);
 
+  const fetchSuratTypes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.get('/surat-types');
+
+      if (res.data.success) {
+        setSuratTypes(res.data.data || []);
+      } else {
+        setError(res.data.message || "Gagal memuat daftar layanan.");
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+      setError("Tidak dapat terhubung ke server. Pastikan koneksi internet stabil.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Persistence: Load Non-PII State on Mount (Hanya jenis surat & preferensi non-sensitif)
   useEffect(() => {
     const savedState = sessionStorage.getItem('surat_form_state');
@@ -62,7 +81,7 @@ export default function LayananSurat() {
 
     setStep(1); // Always start fresh at step 1
     fetchSuratTypes();
-  }, []);
+  }, [fetchSuratTypes]);
 
   // Persistence: Save ONLY Non-PII State on Changes
   useEffect(() => {

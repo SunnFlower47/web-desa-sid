@@ -120,3 +120,14 @@
 - **Dampak/risiko**: Rendah.
 - **Rollback**: `git checkout HEAD~1 <file>`
 - **Tindakan manual**: Tidak ada.
+
+## [23:40] fix(layanan) -- Pemulihan Definisi fetchSuratTypes pada Halaman Pengajuan Surat
+- Ringkasan: Mengembalikan definisi fetchSuratTypes menggunakan useCallback di src/app/layanan/surat/page.jsx yang sempat terhapus saat pembersihan linter, memperbaiki uncaught ReferenceError pada client component.
+- File:
+  - src/app/layanan/surat/page.jsx
+  - docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md
+- Commit: PENDING_COMMIT
+- Test: npm test (25 passed, 0 failed), npm run lint (0 errors)
+- Dampak/risiko: Rendah. Memperbaiki rendering awal daftar layanan jenis surat di /layanan/surat.
+- Rollback: git revert <commit_hash>
+- Tindakan manual: Tidak ada.
