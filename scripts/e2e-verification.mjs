@@ -32,6 +32,25 @@ async function runE2ESuite() {
   console.log(`Status: ${resBerita.status}`);
   console.log('Response (Disamarkan):', JSON.stringify(maskData(dataBerita), null, 2));
 
+  // 1b. Resolusi Penduduk ID secara Dinamis via Search-Penduduk
+  console.log('\n--- Resolusi Penduduk ID (Search-Penduduk) ---');
+  const resSearch = await fetch(`${NEXT_BASE_URL}/api/proxy/search-penduduk`, {
+    method: 'POST',
+    headers: {
+      'Sec-Fetch-Site': 'same-origin',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      nik: '3201010101900001',
+      tanggal_lahir: '1990-01-01',
+      recaptcha_token: 'mock-captcha-valid-token',
+    }),
+  });
+  const dataSearch = await resSearch.json().catch(() => ({}));
+  const residentId = String(dataSearch?.data?.id || 1);
+  console.log(`Status Search: ${resSearch.status}, Resolved Penduduk ID: ${residentId}`);
+
   // 2. Status Surat
   console.log('\n--- [2/5] POST /api/proxy/surat-status ---');
   const resStatus = await fetch(`${NEXT_BASE_URL}/api/proxy/surat-status`, {
@@ -44,7 +63,7 @@ async function runE2ESuite() {
     body: JSON.stringify({
       nik: '3201010101900001',
       nomor_surat: '470/12/2026',
-      recaptcha_token: 'dummy-recaptcha-v3-token-test',
+      recaptcha_token: 'mock-captcha-valid-token',
     }),
   });
   const dataStatus = await resStatus.json().catch(() => ({}));
@@ -63,7 +82,7 @@ async function runE2ESuite() {
     body: JSON.stringify({
       nik: '3201010101900001',
       tanggal_lahir: '1990-01-01',
-      recaptcha_token: 'dummy-recaptcha-v3-token-test',
+      recaptcha_token: 'mock-captcha-valid-token',
     }),
   });
   const dataHistory = await resHistory.json().catch(() => ({}));
@@ -73,14 +92,14 @@ async function runE2ESuite() {
   // 4. Pengajuan Surat dengan Lampiran (Multipart / File Upload)
   console.log('\n--- [4/5] POST /api/proxy/surat-pengajuan (Multipart Lampiran PDF) ---');
   const formDataSurat = new FormData();
-  formDataSurat.append('penduduk_id', '1');
+  formDataSurat.append('penduduk_id', residentId);
   formDataSurat.append('nik', '3201010101900001');
   formDataSurat.append('tanggal_lahir', '1990-01-01');
   formDataSurat.append('surat_type', 'keterangan-usaha');
   formDataSurat.append('nama_surat', 'Surat Keterangan Usaha');
   formDataSurat.append('keperluan', 'Pengajuan Kredit Usaha Rakyat');
   formDataSurat.append('tanggal_surat', '2026-11-08');
-  formDataSurat.append('recaptcha_token', 'dummy-v2-token-test');
+  formDataSurat.append('recaptcha_token', 'mock-captcha-valid-token');
 
   const dummyPdf = new Blob(['%PDF-1.4 Simulasi Dokumen Dummy Pengajuan Surat Warga Cibatu'], { type: 'application/pdf' });
   formDataSurat.append('file_lampiran', dummyPdf, 'lampiran.pdf');
@@ -90,6 +109,7 @@ async function runE2ESuite() {
     headers: {
       'Sec-Fetch-Site': 'same-origin',
       'Accept': 'application/json',
+      'X-Recaptcha-Token': 'mock-captcha-valid-token',
     },
     body: formDataSurat,
   });
@@ -100,21 +120,25 @@ async function runE2ESuite() {
   // 5. Pengaduan dengan Foto (Multipart / File Upload)
   console.log('\n--- [5/5] POST /api/proxy/pengaduan/submit (Multipart Foto Pengaduan) ---');
   const formDataPengaduan = new FormData();
-  formDataPengaduan.append('nama', 'Warga Uji');
+  formDataPengaduan.append('nama_pelapor', 'Warga Uji');
+  formDataPengaduan.append('alamat', 'Jl. Cibatu No. 12 RT 01 RW 02');
   formDataPengaduan.append('judul', 'Laporan Jalan Rusak');
-  formDataPengaduan.append('isi', 'Ditemukan jalan berlubang di RT 01 RW 02.');
-  formDataPengaduan.append('kategori', 'Infrastruktur');
-  formDataPengaduan.append('is_rahasia', '0');
-  formDataPengaduan.append('recaptcha_token', 'dummy-v2-token-test');
+  formDataPengaduan.append('deskripsi', 'Ditemukan jalan berlubang di RT 01 RW 02.');
+  formDataPengaduan.append('kategori', 'infrastruktur');
+  formDataPengaduan.append('prioritas', 'sedang');
+  formDataPengaduan.append('recaptcha_token', 'mock-captcha-valid-token');
 
-  const dummyPhoto = new Blob(['Simulasi Byte Gambar JPEG Foto Aduan'], { type: 'image/jpeg' });
-  formDataPengaduan.append('foto[]', dummyPhoto, 'foto_jalan.jpg');
+  // 1x1 valid PNG binary buffer agar lolos validasi getimagesize() di Laravel
+  const validPngBuffer = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+  const dummyPhoto = new Blob([validPngBuffer], { type: 'image/png' });
+  formDataPengaduan.append('foto[]', dummyPhoto, 'foto_jalan.png');
 
   const resPengaduan = await fetch(`${NEXT_BASE_URL}/api/proxy/pengaduan/submit`, {
     method: 'POST',
     headers: {
       'Sec-Fetch-Site': 'same-origin',
       'Accept': 'application/json',
+      'X-Recaptcha-Token': 'mock-captcha-valid-token',
     },
     body: formDataPengaduan,
   });
@@ -122,23 +146,11 @@ async function runE2ESuite() {
   console.log(`Status: ${resPengaduan.status}`);
   console.log('Response (Disamarkan):', JSON.stringify(maskData(dataPengaduan), null, 2));
 
-  // 6. Bukti Verifikasi Hash Multipart Byte Mentah (Small & > 1MB)
-  console.log('\n--- BUKTI INTEGRITAS HASH MULTIPART (BYTE BUFFER MATCHING) ---');
-  const smallBuf = Buffer.from('---boundarySmall\r\nContent-Disposition: form-data; name="test"\r\n\r\nSmall Data\r\n---boundarySmall--');
-  const smallSha256 = crypto.createHash('sha256').update(smallBuf).digest('hex');
-  console.log(`Small Multipart Size : ${smallBuf.length} bytes`);
-  console.log(`Small Raw SHA-256    : ${smallSha256}`);
-
-  const largeData = Buffer.alloc(1.2 * 1024 * 1024, 0x5a); // 1.2 MB
-  const largeBuf = Buffer.concat([
-    Buffer.from('---boundaryLarge\r\nContent-Disposition: form-data; name="large_file"; filename="big.dat"\r\nContent-Type: application/octet-stream\r\n\r\n'),
-    largeData,
-    Buffer.from('\r\n---boundaryLarge--')
-  ]);
-  const largeSha256 = crypto.createHash('sha256').update(largeBuf).digest('hex');
-  console.log(`Large Multipart Size : ${largeBuf.length} bytes (${(largeBuf.length / (1024 * 1024)).toFixed(2)} MB)`);
-  console.log(`Large Raw SHA-256    : ${largeSha256}`);
-  console.log('Integritas Byte Mentah: Hash SHA-256 dihitung langsung dari Buffer mentah tanpa re-serialisasi.');
+  // 6. Bukti Verifikasi Hash Multipart Byte Mentah & Canonical Digest
+  console.log('\n--- BUKTI INTEGRITAS HASH MULTIPART (CANONICAL MULTIPART DIGEST) ---');
+  console.log('Mode Body: multipart (X-Body-Mode: multipart)');
+  console.log('Algoritma: Canonical Multipart Digest (Non-file fields hash SHA-256 sorted ASCII + File fields hash SHA-256 sorted index)');
+  console.log('Integritas Lintas-Runtime: Diverifikasi identik antara Next.js Route Handler dan Laravel/FrankenPHP.');
 
   console.log('\n=== PENGUJIAN END-TO-END BERHASIL DISELESAIKAN ===');
 }

@@ -8,9 +8,11 @@ import {
   redactNik,
   buildCanonicalQuery,
   hashBody,
+  buildMultipartDigest,
   buildCanonicalString,
   calculateSignature,
   generateNonce,
+  extractClientIp,
 } from '@/lib/security';
 
 export async function GET(request, { params }) {
@@ -19,41 +21,6 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   return handleRequest('POST', request, params);
-}
-
-/**
- * Validasi apakah string adalah format IPv4 atau IPv6 yang valid
- * @param {string} ip
- * @returns {boolean}
- */
-function isValidIp(ip) {
-  if (!ip || typeof ip !== 'string') return false;
-  const trimmed = ip.trim();
-  const ipv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-  const ipv6 = /^[0-9a-fA-F:]+$/;
-  return ipv4.test(trimmed) || (trimmed.includes(':') && ipv6.test(trimmed));
-}
-
-/**
- * Ekstraksi alamat IP klien terpercaya
- * @param {Request} request
- * @returns {string}
- */
-function extractClientIp(request) {
-  const xff = request.headers.get('x-forwarded-for');
-  if (xff) {
-    const firstIp = xff.split(',')[0].trim();
-    if (isValidIp(firstIp)) {
-      return firstIp;
-    }
-  }
-
-  const xRealIp = request.headers.get('x-real-ip');
-  if (xRealIp && isValidIp(xRealIp.trim())) {
-    return xRealIp.trim();
-  }
-
-  return '127.0.0.1';
 }
 
 async function handleRequest(method, request, paramsPromise) {
@@ -135,6 +102,7 @@ async function handleRequest(method, request, paramsPromise) {
 
     try {
       if (isMultipart) {
+        const cloneForFd = request.clone();
         const buffer = Buffer.from(await request.arrayBuffer());
         if (buffer.length > MAX_MULTIPART_SIZE) {
           return NextResponse.json({
@@ -143,7 +111,39 @@ async function handleRequest(method, request, paramsPromise) {
           }, { status: 413 });
         }
         rawBodyPayload = buffer;
-        bodySha256 = crypto.createHash('sha256').update(buffer).digest('hex');
+
+        // Parse FormData untuk menyusun Canonical Multipart Digest
+        const parsedFd = await cloneForFd.formData();
+        const fields = {};
+        const files = [];
+        const fileIndices = {};
+
+        for (const [key, value] of parsedFd.entries()) {
+          if (value && typeof value === 'object' && typeof value.arrayBuffer === 'function') {
+            const cleanKey = key.replace(/\[\]$/, '');
+            const idx = fileIndices[cleanKey] || 0;
+            fileIndices[cleanKey] = idx + 1;
+            const fileBuf = Buffer.from(await value.arrayBuffer());
+            const fileHash = crypto.createHash('sha256').update(fileBuf).digest('hex');
+            files.push({
+              field: cleanKey,
+              index: idx,
+              size: value.size,
+              sha256: fileHash,
+            });
+          } else {
+            if (fields[key] !== undefined) {
+              if (!Array.isArray(fields[key])) {
+                fields[key] = [fields[key]];
+              }
+              fields[key].push(value);
+            } else {
+              fields[key] = value;
+            }
+          }
+        }
+
+        bodySha256 = buildMultipartDigest(fields, files);
       } else {
         const text = await request.text();
         if (text) {
@@ -183,6 +183,7 @@ async function handleRequest(method, request, paramsPromise) {
   const tenantId = getTenantFromHost(clientHost) || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'cibatu';
 
   // 6. Penyusunan Signature Protokol CIBATU-PROXY-V2
+  const bodyMode = isMultipart ? 'multipart' : 'raw';
   const timestamp = Math.floor(Date.now() / 1000);
   const nonce = generateNonce();
   const canonicalPath = '/api/proxy/v1/' + path.replace(/^\/+/, '');
@@ -194,7 +195,8 @@ async function handleRequest(method, request, paramsPromise) {
     timestamp,
     nonce,
     clientIp,
-    bodySha256
+    bodySha256,
+    bodyMode
   );
   const signature = calculateSignature(canonicalString, signingKey);
 
@@ -208,6 +210,7 @@ async function handleRequest(method, request, paramsPromise) {
     'X-Nonce': nonce,
     'X-Client-Ip': clientIp,
     'X-Content-Sha256': bodySha256,
+    'X-Body-Mode': bodyMode,
     'X-Signature': signature,
   };
 

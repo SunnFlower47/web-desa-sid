@@ -59,7 +59,7 @@ export function getValidatedSigningKey() {
     return { key: null, keyId: '', error: validation.error };
   }
 
-  const keyId = process.env.PROXY_KEY_ID || 'cibatu-proxy-v2-primary';
+  const keyId = process.env.PROXY_KEY_ID || 'v1';
   return { key: key.trim(), keyId: keyId.trim(), error: null };
 }
 
@@ -142,6 +142,95 @@ export function buildCanonicalQuery(query) {
 }
 
 /**
+ * Validasi apakah string adalah format IPv4 atau IPv6 yang valid
+ * @param {string} ip
+ * @returns {boolean}
+ */
+export function isValidIp(ip) {
+  if (!ip || typeof ip !== 'string') return false;
+  const trimmed = ip.trim();
+  const ipv4 = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  const ipv6 = /^[0-9a-fA-F:]+$/;
+  return ipv4.test(trimmed) || (trimmed.includes(':') && ipv6.test(trimmed));
+}
+
+/**
+ * Ekstraksi alamat IP klien terpercaya (Secure Client IP Extraction)
+ * 
+ * Strategi Keamanan (CWE-290 Spoofing Prevention):
+ * 1. Default Mode (TRUST_PROXY tidak aktif):
+ *    Header `X-Forwarded-For` dan `X-Real-IP` yang dikirim langsung oleh browser/klien
+ *    dianggap TIDAK TEPERCAYA (dapat dipalsukan/spoofed dengan mudah oleh penyerang).
+ *    Dalam mode ini, proxy mengabaikan header tersebut dan menggunakan fallback loopback/direct.
+ * 2. Trusted Proxy Mode (TRUST_PROXY=true / TRUST_PROXY=cloudflare / TRUST_PROXY=reverse_proxy):
+ *    - Cloudflare Edge: Header `cf-connecting-ip` (disuntikkan oleh edge Cloudflare, tidak bisa dipalsukan klien).
+ *    - Nginx / Reverse Proxy: Header `x-real-ip` (dikonfigurasi dengan proxy_set_header $remote_addr yang menimpa input klien).
+ *    - X-Forwarded-For: Jika berasal dari trusted proxy, ambil IP terakhir (hop terdekat sebelum trusted proxy)
+ *      bukan IP pertama yang rentan di-spoof oleh attacker melalui header injection.
+ *
+ * @param {Request|{ headers: Headers|Map|Record<string, string>, ip?: string }} request
+ * @param {object} [options]
+ * @param {boolean} [options.trustProxy]
+ * @returns {string} Alamat IP klien yang tervalidasi
+ */
+export function extractClientIp(request, options = {}) {
+  // Ambil konfigurasi trust proxy dari parameter atau environment
+  const trustProxy = options.trustProxy !== undefined 
+    ? options.trustProxy 
+    : (process.env.TRUST_PROXY === 'true' || process.env.TRUST_PROXY === '1' || process.env.NODE_ENV === 'production');
+
+  // Ambil helper untuk membaca header secara seragam
+  const getHeader = (name) => {
+    if (!request || !request.headers) return null;
+    if (typeof request.headers.get === 'function') {
+      return request.headers.get(name);
+    }
+    return request.headers[name] || request.headers[name.toLowerCase()] || null;
+  };
+
+  // Jika trustProxy tidak aktif, JANGAN PERCAYA X-Forwarded-For atau X-Real-IP dari klien
+  if (!trustProxy) {
+    if (request && typeof request.ip === 'string' && isValidIp(request.ip)) {
+      return request.ip.trim();
+    }
+    return '127.0.0.1';
+  }
+
+  // 1. Prioritas 1: Header khusus dari penyedia edge tepercaya
+  const cfConnectingIp = getHeader('cf-connecting-ip');
+  if (cfConnectingIp && isValidIp(cfConnectingIp.trim())) {
+    return cfConnectingIp.trim();
+  }
+
+  const trueClientIp = getHeader('true-client-ip');
+  if (trueClientIp && isValidIp(trueClientIp.trim())) {
+    return trueClientIp.trim();
+  }
+
+  // 2. Prioritas 2: X-Real-IP dari reverse proxy internal (misal: Nginx)
+  const xRealIp = getHeader('x-real-ip');
+  if (xRealIp && isValidIp(xRealIp.trim())) {
+    return xRealIp.trim();
+  }
+
+  // 3. Prioritas 3: X-Forwarded-For dari reverse proxy
+  const xff = getHeader('x-forwarded-for');
+  if (xff && typeof xff === 'string') {
+    const parts = xff.split(',').map((p) => p.trim()).filter(isValidIp);
+    if (parts.length > 0) {
+      // Ambil hop terakhir yang ditambahkan oleh trusted proxy terdekat
+      return parts[parts.length - 1];
+    }
+  }
+
+  if (request && typeof request.ip === 'string' && isValidIp(request.ip)) {
+    return request.ip.trim();
+  }
+
+  return '127.0.0.1';
+}
+
+/**
  * Hitung hash SHA-256 dari raw body string (hex lowercase)
  * Jika body null/kosong, kembalikan hash dari string kosong
  * @param {string|null|undefined} body
@@ -149,6 +238,46 @@ export function buildCanonicalQuery(query) {
  */
 export function hashBody(body) {
   return crypto.createHash('sha256').update(body || '').digest('hex');
+}
+
+/**
+ * Hitung Canonical Multipart Digest dari form fields dan file upload:
+ * - Field non-file: hash nilai, urut nama ASCII
+ * - File: nama field, ukuran, SHA-256 isi, urut nama+indeks
+ * Digabung dengan newline dan di-hash SHA-256
+ * @param {Record<string, any>} fields
+ * @param {Array<{ field: string, index: number, size: number, sha256: string }>} files
+ * @returns {string} SHA-256 hex digest
+ */
+export function buildMultipartDigest(fields, files) {
+  const lines = [];
+
+  // 1. Non-file fields: hash nilai, urut nama ASCII
+  const sortedKeys = Object.keys(fields || {}).sort();
+  for (const key of sortedKeys) {
+    const val = fields[key];
+    const valStr = typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val);
+    const valHash = crypto.createHash('sha256').update(valStr).digest('hex');
+    lines.push(`field:${key}:${valHash}`);
+  }
+
+  // 2. Files: field name, index, size, sha256 of contents, sort by field asc then index asc
+  const sortedFiles = [...(files || [])].sort((a, b) => {
+    const cmp = String(a.field).localeCompare(String(b.field));
+    if (cmp !== 0) return cmp;
+    return Number(a.index) - Number(b.index);
+  });
+
+  for (const file of sortedFiles) {
+    const fName = file.field;
+    const fIdx = Number(file.index);
+    const fSize = Number(file.size);
+    const fHash = String(file.sha256).toLowerCase();
+    lines.push(`file:${fName}:${fIdx}:${fSize}:${fHash}`);
+  }
+
+  const combined = lines.join('\n');
+  return crypto.createHash('sha256').update(combined).digest('hex');
 }
 
 /**
@@ -160,9 +289,10 @@ export function hashBody(body) {
  * @param {string} nonce
  * @param {string} clientIp
  * @param {string} bodySha256
+ * @param {string} [bodyMode='raw']
  * @returns {string}
  */
-export function buildCanonicalString(method, path, canonicalQuery, timestamp, nonce, clientIp, bodySha256) {
+export function buildCanonicalString(method, path, canonicalQuery, timestamp, nonce, clientIp, bodySha256, bodyMode = 'raw') {
   const normMethod = (method || '').trim().toUpperCase();
   const normPath = '/' + (path || '').trim().replace(/^\/+/, '');
 
@@ -174,7 +304,8 @@ export function buildCanonicalString(method, path, canonicalQuery, timestamp, no
     String(timestamp).trim(),
     (nonce || '').trim(),
     (clientIp || '').trim(),
-    (bodySha256 || '').trim().toLowerCase()
+    (bodySha256 || '').trim().toLowerCase(),
+    (bodyMode || 'raw').trim().toLowerCase(),
   ].join('\n');
 }
 

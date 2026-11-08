@@ -50,3 +50,39 @@
 - **Dampak/risiko**: Rendah. Kode frontend lebih bersih dan patuh standar React 19 / ESLint 9.
 - **Rollback**: `git checkout HEAD~1 <file>`
 - **Tindakan manual**: Tidak ada.
+
+## [20:45] security — Canonical Multipart Digest, Anti-Spoofing Client IP & Harmonisasi Konfigurasi V2
+- **Ringkasan**:
+  1. **Canonical Multipart Digest Lintas-Runtime**:
+     - Mengimplementasikan penghitungan `buildMultipartDigest` di `src/lib/security.js` dan Route Handler `src/app/api/proxy/[...path]/route.js`.
+     - Request multipart di-parse via Web API `request.formData()`: field non-file di-hash SHA-256 dan diurutkan secara ASCII, sedangkan berkas di-digest berdasarkan `field:index:size:sha256(content)` yang diurutkan berdasar field dan index.
+     - Menyertakan header `X-Body-Mode: multipart` dan menandatangani 9 baris canonical string yang cocok 100% dengan test vector backend.
+  2. **Anti-Spoofing Client IP (Task 7)**:
+     - Memindahkan fungsi ekstraksi IP ke `src/lib/security.js` dengan fungsi `extractClientIp(request, options)` dan `isValidIp(ip)`.
+     - Menerapkan arsitektur pencegahan manipulasi header IP (CWE-290): Pada mode default / untrusted (`trustProxy = false`), header `X-Forwarded-For` dan `X-Real-IP` yang dikirim langsung oleh klien diabaikan secara total (fallback `127.0.0.1`).
+     - Pada mode trusted proxy, sistem memprioritaskan edge header tepercaya (`cf-connecting-ip`) atau hop IP terakhir yang sah pada multi-hop proxy, mencegah injeksi IP palsu pada bagian awal header.
+  3. **Harmonisasi Konfigurasi V2 (Task 6)**:
+     - Menyamakan default pengenal kunci `PROXY_KEY_ID=v1` di `.env.example` dan fallback di `security.js`.
+  4. **Quality Gate Penuh**:
+     - Pengujian unit dan keamanan: 21 tests passed (termasuk verifikasi anti-spoofing IP, multipart digest, fail-closed keys).
+     - Linting ESLint: 0 errors.
+     - Production Build Next.js: Sukses terkompilasi optimal.
+     - Audit dependensi: 0 vulnerabilities.
+- **File**:
+  - `src/lib/security.js`
+  - `src/app/api/proxy/[...path]/route.js`
+  - `.env.example`
+  - `docs/proxy-signature.md`
+  - `docs/proxy-signature-test-vectors.json`
+  - `scripts/test-security.mjs`
+  - `scripts/e2e-verification.mjs`
+  - `docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md`
+- **Commit**: (menunggu commit)
+- **Test**:
+  - `npm test`: PASS (21 tests passed, 0 failed)
+  - `npm run lint`: PASS (0 errors, 26 warnings)
+  - `npm run build`: PASS (terkompilasi 18/18 static/dynamic routes)
+  - `npm audit --omit=dev`: PASS (found 0 vulnerabilities)
+- **Dampak/risiko**: Rendah.
+- **Rollback**: `git checkout HEAD~1 <file>`
+- **Tindakan manual**: Pastikan `PROXY_KEY_ID=v1` di `.env` lokal/produksi.

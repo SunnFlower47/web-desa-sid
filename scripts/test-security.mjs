@@ -12,9 +12,12 @@ import {
   rfc3986Encode,
   buildCanonicalQuery,
   hashBody,
+  buildMultipartDigest,
   buildCanonicalString,
   calculateSignature,
   generateNonce,
+  extractClientIp,
+  isValidIp,
   ALLOWED_PROXY_ROUTES,
 } from '../src/lib/security.js';
 
@@ -219,8 +222,14 @@ test('Proxy V2: Membuktikan output signature generator identik 100% dengan docs/
     const calculatedQuery = buildCanonicalQuery(request.query);
     assert.equal(calculatedQuery, canonical.canonical_query, `Canonical Query mismatch pada ${case_id}`);
 
-    // 2. Verifikasi Body SHA-256
-    const calculatedBodyHash = hashBody(request.body);
+    // 2. Verifikasi Body SHA-256 (Raw string atau Canonical Multipart Digest)
+    const bodyMode = request.body_mode || 'raw';
+    let calculatedBodyHash;
+    if (bodyMode === 'multipart') {
+      calculatedBodyHash = buildMultipartDigest(request.multipart_fields, request.multipart_files);
+    } else {
+      calculatedBodyHash = hashBody(request.body);
+    }
     assert.equal(calculatedBodyHash, canonical.body_sha256, `Body SHA-256 mismatch pada ${case_id}`);
 
     // 3. Verifikasi Canonical String
@@ -231,7 +240,8 @@ test('Proxy V2: Membuktikan output signature generator identik 100% dengan docs/
       timestamp,
       nonce,
       client_ip,
-      calculatedBodyHash
+      calculatedBodyHash,
+      bodyMode
     );
     assert.equal(calculatedCanonicalString, canonical.canonical_string, `Canonical String mismatch pada ${case_id}`);
 
@@ -239,4 +249,91 @@ test('Proxy V2: Membuktikan output signature generator identik 100% dengan docs/
     const calculatedSignature = calculateSignature(calculatedCanonicalString, test_secret_key);
     assert.equal(calculatedSignature, expected_headers['X-Signature'], `Signature HMAC-SHA256 mismatch pada ${case_id}`);
   }
+});
+
+// ==========================================
+// 6. PENGUJIAN ANTI-SPOOFING CLIENT IP (CWE-290)
+// ==========================================
+test('Security IP: extractClientIp menolak spoofing X-Forwarded-For dan X-Real-IP jika trustProxy=false (default untrusted)', () => {
+  // Simulasi klien langsung mengirim header palsu tanpa trusted proxy
+  const untrustedReq = {
+    headers: {
+      'x-forwarded-for': '203.0.113.195',
+      'x-real-ip': '198.51.100.22',
+    },
+  };
+
+  const resolvedIp = extractClientIp(untrustedReq, { trustProxy: false });
+  assert.equal(resolvedIp, '127.0.0.1', 'Header IP dari klien tidak boleh dipercaya saat trustProxy=false');
+});
+
+test('Security IP: extractClientIp mencegah manipulasi IP injection pada multi-hop proxy (mengambil hop terpercaya)', () => {
+  // Penyerang menyuntikkan IP palsu di depan: '1.2.3.4, 203.0.113.50' (di mana 203.0.113.50 ditempel proxy)
+  const spoofAttemptReq = {
+    headers: {
+      'x-forwarded-for': '1.2.3.4, 203.0.113.50',
+    },
+  };
+
+  const resolvedIp = extractClientIp(spoofAttemptReq, { trustProxy: true });
+  assert.equal(resolvedIp, '203.0.113.50', 'Harus mengambil IP hop terpercaya terakhir, bukan IP palsu yang diinjeksi attacker');
+});
+
+test('Security IP: extractClientIp memprioritaskan edge header cf-connecting-ip yang disuntikkan Cloudflare', () => {
+  const cloudflareReq = {
+    headers: {
+      'cf-connecting-ip': '198.51.100.99',
+      'x-forwarded-for': '1.2.3.4, 5.6.7.8',
+    },
+  };
+
+  const resolvedIp = extractClientIp(cloudflareReq, { trustProxy: true });
+  assert.equal(resolvedIp, '198.51.100.99', 'Edge header Cloudflare cf-connecting-ip harus diprioritaskan');
+});
+
+// ==========================================
+// 7. PENGUJIAN CANONICAL MULTIPART DIGEST DAN INTEGRITAS
+// ==========================================
+test('Multipart: buildMultipartDigest mendeteksi dan menghasilkan hash berbeda jika ada manipulasi field atau file', () => {
+  const fields = {
+    nik: '3201010101900001',
+    keperluan: 'Pengajuan Surat Keterangan Usaha',
+  };
+  const files = [
+    {
+      field: 'file_lampiran',
+      index: 0,
+      size: 42,
+      sha256: '254aecfe19c2238e8671d06ae2744c1361f9bf78f093632a7eeafe87a3ae5338',
+    },
+  ];
+
+  const baseDigest = buildMultipartDigest(fields, files);
+  assert.equal(typeof baseDigest, 'string');
+  assert.equal(baseDigest.length, 64);
+
+  // 1. Nilai field dimanipulasi
+  const modifiedFields = { ...fields, keperluan: 'Manipulasi data keperluan' };
+  const modifiedFieldDigest = buildMultipartDigest(modifiedFields, files);
+  assert.notEqual(modifiedFieldDigest, baseDigest, 'Perubahan field harus menghasilkan digest berbeda');
+
+  // 2. File diganti (hash konten berbeda)
+  const modifiedFiles = [
+    {
+      field: 'file_lampiran',
+      index: 0,
+      size: 42,
+      sha256: 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    },
+  ];
+  const modifiedFileDigest = buildMultipartDigest(fields, modifiedFiles);
+  assert.notEqual(modifiedFileDigest, baseDigest, 'Penggantian konten berkas harus menghasilkan digest berbeda');
+
+  // 3. Field baru ditambahkan
+  const addedFieldDigest = buildMultipartDigest({ ...fields, extra: '123' }, files);
+  assert.notEqual(addedFieldDigest, baseDigest, 'Penambahan field harus menghasilkan digest berbeda');
+
+  // 4. File dihapus
+  const deletedFileDigest = buildMultipartDigest(fields, []);
+  assert.notEqual(deletedFileDigest, baseDigest, 'Penghapusan file harus menghasilkan digest berbeda');
 });

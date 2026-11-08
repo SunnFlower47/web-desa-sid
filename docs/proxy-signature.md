@@ -15,22 +15,23 @@ Arsitektur **Proxy Signature V2 (`CIBATU-PROXY-V2`)** mengadopsi prinsip *Zero T
 
 ## 2. Header Protokol Wajib
 
-Setiap permintaan proxy dari server frontend ke Laravel wajib menyertakan 6 header keamanan berikut:
+Setiap permintaan proxy dari server frontend ke Laravel wajib menyertakan 7 header keamanan berikut:
 
 | Header | Format | Contoh | Deskripsi |
 | :--- | :--- | :--- | :--- |
-| `X-Key-Id` | String alfanumerik | `key-2026-v2-primary` | Pengenal kunci yang dipakai untuk menandatangani request. |
+| `X-Key-Id` | String alfanumerik | `v1` | Pengenal kunci yang dipakai untuk menandatangani request. Default: `v1`. |
 | `X-Timestamp` | Integer (Unix Epoch detik) | `1762600000` | Waktu pembuatan request di sisi frontend server. |
 | `X-Nonce` | Base64URL string (min. 16 byte / 22 karakter) | `nonce-random-base64url-token-12345` | Nilai unik sekali pakai untuk mitigasi *Replay Attack*. |
 | `X-Client-Ip` | String IPv4 / IPv6 valid | `203.0.113.50` | Alamat IP asli pengguna akhir yang memanggil frontend. |
-| `X-Content-Sha256` | Lowercase Hex SHA-256 (64 karakter) | `e3b0c44298fc1c14...` | Hash SHA-256 dari raw body payload (empty string hash jika body kosong). |
-| `X-Signature` | Lowercase Hex HMAC-SHA256 (64 karakter) | `1e3e5d2a11905b3d...` | Tanda tangan HMAC dari string kanonik menggunakan kunci rahasia. |
+| `X-Content-Sha256` | Lowercase Hex SHA-256 (64 karakter) | `e3b0c44298fc1c14...` | Hash SHA-256 dari raw body payload (atau Canonical Multipart Digest untuk multipart). |
+| `X-Body-Mode` | String enum (`raw` \| `multipart`) | `raw` | Penanda format body. Wajib `multipart` jika Content-Type adalah `multipart/form-data`. |
+| `X-Signature` | Lowercase Hex HMAC-SHA256 (64 karakter) | `1e3e5d2a11905b3d...` | Tanda tangan HMAC dari 9 baris string kanonik menggunakan kunci rahasia. |
 
 ---
 
 ## 3. Format String Kanonik
 
-String kanonik disusun dengan menggabungkan 8 baris teks yang dipisahkan oleh karakter baris baru (*newline* `\n`):
+String kanonik disusun dengan menggabungkan 9 baris teks yang dipisahkan oleh karakter baris baru (*newline* `\n`):
 
 ```text
 CIBATU-PROXY-V2\n
@@ -40,7 +41,8 @@ CIBATU-PROXY-V2\n
 <TIMESTAMP>\n
 <NONCE>\n
 <CLIENT_IP>\n
-<BODY_SHA256>
+<BODY_SHA256>\n
+<BODY_MODE>
 ```
 
 ### Rincian Baris:
@@ -57,9 +59,14 @@ CIBATU-PROXY-V2\n
 5. **Timestamp**: Unix epoch timestamp dalam detik (misal: `1762600000`).
 6. **Nonce**: Token acak kriptografis Base64URL minimal 16 bytes (misal: `crypto.randomBytes(16).toString('base64url')`).
 7. **Client IP**: Alamat IP publik klien yang tervalidasi.
-8. **Body SHA-256**: Hash SHA-256 dari *raw request payload*.
-   - Jika request memiliki body kosong (seperti pada sebagian besar request GET/POST parameterless), nilainya adalah hash dari string kosong:
+8. **Body SHA-256**:
+   - Mode `raw`: Hash SHA-256 dari *raw request payload*. Jika body kosong, gunakan hash dari string kosong:
      `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+   - Mode `multipart`: Dihitung melalui **Canonical Multipart Digest** lintas-runtime (FrankenPHP / PHP-FPM / CLI server):
+     - Field non-file: Format `field:{key}:{sha256(value)}`, diurutkan berdasarkan `key` ASCII ascending.
+     - File upload: Format `file:{field}:{index}:{size}:{sha256(file_content)}`, diurutkan berdasarkan `field` ascending lalu `index` ascending.
+     - Gabungkan setiap baris dengan `\n` dan hash hasilnya dengan SHA-256 menjadi string hex 64 karakter.
+9. **Body Mode**: Huruf kecil `raw` atau `multipart`. Jika `Content-Type` diawali `multipart/form-data`, wajib bernilai `multipart` (mencegah *downgrade attack*).
 
 ### Perhitungan Signature:
 ```text
