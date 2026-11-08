@@ -109,7 +109,7 @@ export default function TentangDesaPage() {
               </div>
               
               <blockquote className="text-xl md:text-2xl text-slate-700 font-medium leading-relaxed relative z-10 italic">
-                "{visiDesa}"
+                &ldquo;{visiDesa}&rdquo;
               </blockquote>
             </div>
           </motion.div>

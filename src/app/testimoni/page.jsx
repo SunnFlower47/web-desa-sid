@@ -226,7 +226,7 @@ export default function TestimoniPage() {
               >
                 <MessageSquare className="absolute top-6 right-6 text-slate-100/50 group-hover:text-emerald-50/50 transition-colors" size={40} />
                 <p className="text-slate-600 text-sm font-medium leading-relaxed mb-6 italic relative z-10">
-                  "{testimonial.testimoni}"
+                  &ldquo;{testimonial.testimoni}&rdquo;
                 </p>
                 <div className="flex items-center gap-4 relative z-10 pt-4 border-t border-slate-50">
                   <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-700 font-black text-lg shadow-inner">

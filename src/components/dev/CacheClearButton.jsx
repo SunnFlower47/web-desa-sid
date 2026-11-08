@@ -4,17 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 export default function CacheClearButton() {
-  const [isDev, setIsDev] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Tombol ini HANYA akan muncul di local environment (development)
-    if (process.env.NODE_ENV === 'development') {
-      setIsDev(true);
-    }
-  }, []);
-
-  if (!isDev) return null;
+  // Tombol ini HANYA akan muncul di local environment (development)
+  if (process.env.NODE_ENV !== 'development') return null;
 
   const handleClearCache = async () => {
     setLoading(true);

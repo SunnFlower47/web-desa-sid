@@ -6,8 +6,6 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/immutability": "warn",
-      "react/no-unescaped-entities": "warn",
       "@next/next/no-img-element": "warn",
     }
   },

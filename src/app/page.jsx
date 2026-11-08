@@ -474,7 +474,7 @@ export default function Home() {
                   <div key={idx} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg transition-all relative">
                     <MessageSquare className="absolute top-6 right-6 text-slate-100" size={32} />
                     <p className="text-slate-600 text-sm font-medium leading-relaxed mb-5 italic relative z-10">
-                      "{testi.testimoni}"
+                      &ldquo;{testi.testimoni}&rdquo;
                     </p>
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 font-black text-lg shadow-inner">

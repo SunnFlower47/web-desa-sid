@@ -22,3 +22,31 @@
 - **Dampak/risiko**: Server Next.js wajib memiliki variabel lingkungan `PROXY_SIGNING_KEY` yang cocok dengan backend Laravel. Header lama `X-Proxy-App-Id` tidak lagi dikirimkan.
 - **Rollback**: `git revert <commit_hash>`
 - **Tindakan manual**: Pastikan `.env` atau environment server Next.js diisi `PROXY_SIGNING_KEY` (dan opsional `PROXY_KEY_ID`).
+
+## [19:15] fix & chore — Pemulihan Aturan Linting ESLint, Penanganan Hoisting & Unescaped Entities, Serta Verifikasi E2E
+- **Ringkasan**:
+  1. Memulihkan aturan ESLint `react/no-unescaped-entities` dan `react-hooks/immutability` di `eslint.config.mjs` dengan memperbaiki kode akar penyebab masalah daripada membungkam lint.
+  2. Memperbaiki hoisting function `fetchNews`, `fetchContacts`, dan `fetchSuratTypes` dengan membungkusnya dalam `useCallback` sebelum `useEffect`.
+  3. Memperbaiki unescaped quotes di JSX pada halaman berita, tentang-desa, surat, dan testimoni.
+  4. Menghapus pemanggilan `setState` di dalam `useEffect` pada komponen `CacheClearButton`.
+  5. Menambahkan skrip verifikasi otomatis E2E (`scripts/e2e-verification.mjs`) untuk membuktikan 5 rute proxy (berita, status surat, riwayat surat, pengajuan multipart PDF, dan pengaduan multipart foto) serta integritas hash byte mentah multipart kecil dan > 1MB.
+- **File**:
+  - `eslint.config.mjs`
+  - `src/app/info/berita/page.jsx`
+  - `src/app/layanan/kontak/page.jsx`
+  - `src/app/layanan/surat/page.jsx`
+  - `src/app/info/tentang-desa/page.jsx`
+  - `src/app/page.jsx`
+  - `src/app/testimoni/page.jsx`
+  - `src/components/dev/CacheClearButton.jsx`
+  - `scripts/e2e-verification.mjs`
+  - `docs/changelogs/2026-11-08_proxy_signature_v2_redesign.md`
+- **Commit**: (menunggu commit)
+- **Test**:
+  - `npm run lint`: PASS (0 errors, 26 warnings)
+  - `npm test`: PASS (17 tests passed)
+  - `npm run build`: PASS (seluruh rute terkompilasi sukses 15.7s)
+  - `node scripts/e2e-verification.mjs`: PASS (5 endpoint terverifikasi lolos proxy signature V2)
+- **Dampak/risiko**: Rendah. Kode frontend lebih bersih dan patuh standar React 19 / ESLint 9.
+- **Rollback**: `git checkout HEAD~1 <file>`
+- **Tindakan manual**: Tidak ada.

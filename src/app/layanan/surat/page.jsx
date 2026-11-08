@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, FileText, ClipboardList, CheckCircle,
@@ -98,24 +98,7 @@ export default function LayananSurat() {
   };
 
 
-  const fetchSuratTypes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await api.get('/surat-types');
 
-      if (res.data.success) {
-        setSuratTypes(res.data.data || []);
-      } else {
-        setError(res.data.message || "Gagal memuat daftar layanan.");
-      }
-    } catch (err) {
-      console.error("Fetch Error:", err);
-      setError("Tidak dapat terhubung ke server. Pastikan koneksi internet stabil.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleVerifyIdentity = async (e) => {
     e.preventDefault();
@@ -380,7 +363,7 @@ export default function LayananSurat() {
                           </div>
                           <h4 className="text-base font-bold text-slate-700 mb-1">Layanan tidak ditemukan</h4>
                           <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
-                            Tidak ditemukan jenis surat dengan kata kunci <span className="font-bold text-slate-600">"{searchQuery}"</span>.
+                            Tidak ditemukan jenis surat dengan kata kunci <span className="font-bold text-slate-600">&ldquo;{searchQuery}&rdquo;</span>.
                           </p>
                           <button
                             type="button"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Phone, Mail, MapPin, Send, MessageSquare,
@@ -29,11 +29,7 @@ export default function KontakPage() {
   const [recaptchaToken, setRecaptchaToken] = useState(null);
   const recaptchaRef = React.useRef(null);
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const fetchContacts = async () => {
+  const fetchContacts = useCallback(async () => {
     try {
       const res = await api.get('/kontak-desa');
       if (res.data.success) {
@@ -42,7 +38,11 @@ export default function KontakPage() {
     } catch (err) {
       console.error("Gagal mengambil kontak desa", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

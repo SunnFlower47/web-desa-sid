@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Newspaper, Calendar, User, ArrowRight, Search, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -19,11 +19,7 @@ export default function BeritaPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('Semua');
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
-
-  const fetchNews = async () => {
+  const fetchNews = useCallback(async () => {
     try {
       setLoading(true);
       // Jalankan berurutan agar tidak membuat worker Laravel (Laragon/Herd) deadlock
@@ -43,7 +39,11 @@ export default function BeritaPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
 
   const filteredNews = news.filter(item => {
     const matchSearch = item.judul?.toLowerCase().includes(searchTerm.toLowerCase()) || 
