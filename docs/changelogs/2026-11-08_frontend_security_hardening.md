@@ -69,7 +69,7 @@
 ## [12:35] refactor — Enkapsulasi fungsi pemanggil status surat untuk persiapan migrasi POST
 - Ringkasan: Mengenkapsulasi panggilan API status surat ke fungsi pembungkus terpusat `checkSuratStatus` dan `checkSuratHistory` pada `src/lib/api.js`. Menghubungkan form status surat (`src/app/layanan/status/page.jsx`) ke fungsi ini. Mempersiapkan transisi lintas repo dari GET (query params) ke POST tanpa perlu merombak komponen UI saat backend Laravel telah mengimplementasikan route POST /api/v1/surat-status.
 - File: `src/lib/api.js`, `src/app/layanan/status/page.jsx`
-- Commit: `<hash>`
+- Commit: `5ec004e`
 - Test: `npm run build` (success 18/18 routes)
 - Dampak/risiko: Arsitektur API menjadi modular dan siap beralih ke POST hanya dengan mengubah 1 baris kode di helper saat endpoint backend selesai.
 - Rollback: `git revert HEAD`
