@@ -25,7 +25,7 @@
 ## [12:15] feat — Pengetatan route allowlist, sanitasi path traversal, dan strip client auth headers pada proxy
 - Ringkasan: Mengubah catch-all proxy menjadi sistem allowlist ketat berbasis 20 kelompok endpoint publik yang dibutuhkan frontend. Menerapkan penolakan traversal (.., //, \, %2e%2e, null byte) dengan HTTP 400 dan path di luar allowlist dengan HTTP 404. Membatasi Content-Type (json dan multipart) serta batas payload (2MB JSON, 10MB multipart) dengan HTTP 413/415. Menghapus penerusan header Authorization/Cookie dari client, meneruskan X-Forwarded-For untuk rate limiting Laravel, dan membersihkan URL/NIK dari pesan error log server.
 - File: `src/lib/security.js`, `src/app/api/proxy/[...path]/route.js`
-- Commit: `<hash>`
+- Commit: `1024614`
 - Test: `npm run build` (success 18/18 routes)
 - Dampak/risiko: Request liar atau path di luar rute terdaftar akan ditolak dengan 404; request berbahaya ditolak 400.
 - Rollback: `git revert HEAD`
